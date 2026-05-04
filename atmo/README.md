@@ -12,7 +12,7 @@ Welcome to the backend API for **Atmo**, a modern social media platform. This AP
 ### Installation
 1. Clone the repository.
 2. Run `composer install`.
-3. Configure your `.env` file with database credentials.
+3. Configure your `.env` file with database credentials and JWT settings.
 4. Run migrations/import `atmo.sql` to your database.
 5. Start the server:
    ```bash
@@ -21,17 +21,21 @@ Welcome to the backend API for **Atmo**, a modern social media platform. This AP
 
 ---
 
-## 🔐 Authentication Endpoints
+## 🔐 Authentication & Security
+
+This API uses **Stateless JWT (JSON Web Tokens)** for authentication.
+
+### How to Authenticate:
+1.  **Login**: Call `POST /api/auth/login`. On success, you will receive a `token`.
+2.  **Authorize**: For all "Auth Required" endpoints, include the following header:
+    *   **Key**: `Authorization`
+    *   **Value**: `Bearer <your_token_here>`
 
 | Method | Endpoint | Description | Auth Required |
 | :--- | :--- | :--- | :---: |
 | `POST` | `/api/auth/register` | Create a new user account | No |
-| `POST` | `/api/auth/login` | Log in and start session | No |
-| `POST` | `/api/auth/logout` | Log out and destroy session | Yes |
-| `GET` | `/api/auth/me` | Get current logged-in user details | Yes |
-
-### Registration Payload (Multipart/Form-Data)
-- `username`, `email`, `password`, `first_name`, `last_name`, `dob`, `sex`
+| `POST` | `/api/auth/login` | Log in and receive JWT token | No |
+| `GET` | `/api/auth/me` | Get current token's user details | Yes |
 
 ---
 
@@ -59,9 +63,6 @@ Welcome to the backend API for **Atmo**, a modern social media platform. This AP
 | `POST` | `/api/posts/{id}/comment` | Add a comment to a post | Yes |
 | `POST` | `/api/posts/{id}/repost` | Repost content with optional quote | Yes |
 
-### Comment Payload
-- `comment_text`: (String)
-
 ---
 
 ## 👥 User & Network Endpoints
@@ -77,16 +78,16 @@ Welcome to the backend API for **Atmo**, a modern social media platform. This AP
 
 ---
 
-## 🛡️ Security Features
-- **Bcrypt Hashing**: Secure password storage.
-- **CSRF Ready**: Framework-level protection available.
-- **SQLi Protection**: All queries utilize CI4 Models with prepared statements.
-- **Access Control**: Middleware (Filters) protects sensitive endpoints.
-- **Ownership Validation**: Users can only modify/delete their own data.
+## 🛡️ Security Implementation
+- **JWT Stateless Auth**: Secure, scalable token-based access.
+- **Bcrypt Hashing**: Industry-standard password storage.
+- **SQLi Protection**: Prepared statements via CI4 Query Builder.
+- **Access Control**: Authorization levels enforced via Filters.
+- **File Security**: Strict extension checks and randomized filenames.
 
 ## 📂 Uploads Path
 - **Posts**: `/public/uploads/posts/`
 - **Profiles**: `/public/uploads/profiles/`
 
 ---
-*Built with ❤️ for the Atmo Project.*
+*Built for the Atmo Project.*
