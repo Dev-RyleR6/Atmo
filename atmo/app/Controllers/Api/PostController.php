@@ -12,7 +12,7 @@ class PostController extends BaseController
 
     public function index()
     {
-        $userId = session()->get('user_id');
+        $userId = $this->request->user_id;
         $db = \Config\Database::connect();
         
         // Fetch posts from users I follow + my own posts
@@ -88,7 +88,7 @@ class PostController extends BaseController
 
     public function create()
     {
-        $userId = session()->get('user_id');
+        $userId = $this->request->user_id;
         
         $rules = [
             'content'    => 'permit_empty|string',
@@ -145,7 +145,7 @@ class PostController extends BaseController
 
     public function delete($id)
     {
-        $userId = session()->get('user_id');
+        $userId = $this->request->user_id;
         $postModel = new PostModel();
         
         $post = $postModel->find($id);

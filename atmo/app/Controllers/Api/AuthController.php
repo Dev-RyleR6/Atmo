@@ -5,6 +5,8 @@ namespace App\Controllers\Api;
 use App\Controllers\BaseController;
 use App\Models\UserModel;
 use CodeIgniter\API\ResponseTrait;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 
 class AuthController extends BaseController
 {
@@ -63,37 +65,38 @@ class AuthController extends BaseController
             return $this->fail('Invalid credentials');
         }
 
-        $sessionData = [
-            'user_id' => $user['id'],
-            'username' => $user['username'],
-            'email' => $user['email'],
-            'isLoggedIn' => true
+        $key = env('JWT_SECRET');
+        $expiry = env('JWT_EXPIRY', 3600);
+        $payload = [
+            'iat' => time(),
+            'exp' => time() + $expiry,
+            'uid' => $user['id'],
+            'username' => $user['username']
         ];
 
-        session()->set($sessionData);
+        $token = JWT::encode($payload, $key, 'HS256');
 
         unset($user['password']);
 
         return $this->respond([
             'status' => 'success',
             'message' => 'Login successful',
+            'token' => $token,
             'user' => $user
         ]);
     }
 
     public function logout()
     {
-        session()->destroy();
-        return $this->respond(['status' => 'success', 'message' => 'Logged out successfully']);
+        // JWT is stateless, logout is handled by client deleting the token
+        return $this->respond(['status' => 'success', 'message' => 'Please delete your token on the client side']);
     }
 
     public function me()
     {
-        $userId = session()->get('user_id');
-        if (!$userId) {
-            return $this->failUnauthorized('Not logged in');
-        }
-
+        // This will be accessible if the AuthFilter passes
+        $userId = $this->request->user_id;
+        
         $userModel = new UserModel();
         $user = $userModel->find($userId);
 

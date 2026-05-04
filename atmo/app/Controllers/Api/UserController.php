@@ -57,7 +57,7 @@ class UserController extends BaseController
 
     public function updateProfile()
     {
-        $userId = session()->get('user_id');
+        $userId = $this->request->user_id;
         $userModel = new UserModel();
 
         $rules = [

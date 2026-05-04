@@ -14,7 +14,7 @@ class NetworkController extends BaseController
 
     public function toggleFollow($followedId)
     {
-        $followerId = session()->get('user_id');
+        $followerId = $this->request->user_id;
         if ($followerId == $followedId) {
             return $this->fail('You cannot follow yourself');
         }
@@ -42,7 +42,7 @@ class NetworkController extends BaseController
 
     public function toggleBlock($blockedId)
     {
-        $blockerId = session()->get('user_id');
+        $blockerId = $this->request->user_id;
         if ($blockerId == $blockedId) {
             return $this->fail('You cannot block yourself');
         }

@@ -16,7 +16,7 @@ class SocialController extends BaseController
 
     public function toggleLike($postId)
     {
-        $userId = session()->get('user_id');
+        $userId = $this->request->user_id;
         $likeModel = new LikeModel();
         
         $existing = $likeModel->where('user_id', $userId)->where('post_id', $postId)->first();
@@ -40,7 +40,7 @@ class SocialController extends BaseController
 
     public function addComment($postId)
     {
-        $userId = session()->get('user_id');
+        $userId = $this->request->user_id;
         $text = $this->request->getVar('comment_text');
 
         if (empty($text)) {
@@ -69,7 +69,7 @@ class SocialController extends BaseController
 
     public function repost($postId)
     {
-        $userId = session()->get('user_id');
+        $userId = $this->request->user_id;
         $repostText = $this->request->getVar('repost_text');
 
         $repostModel = new RepostModel();
