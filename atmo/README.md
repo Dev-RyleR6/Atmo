@@ -1,69 +1,92 @@
-# CodeIgniter 4 Application Starter
+# Atmo Backend API Documentation
 
-## What is CodeIgniter?
+Welcome to the backend API for **Atmo**, a modern social media platform. This API is built using **CodeIgniter 4** and provides robust endpoints for authentication, social networking, and content management.
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+## 🚀 Getting Started
 
-This repository holds a composer-installable app starter.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+### Prerequisites
+- PHP 8.1+
+- MySQL/MariaDB
+- Composer
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+### Installation
+1. Clone the repository.
+2. Run `composer install`.
+3. Configure your `.env` file with database credentials.
+4. Run migrations/import `atmo.sql` to your database.
+5. Start the server:
+   ```bash
+   php spark serve
+   ```
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+---
 
-## Installation & updates
+## 🔐 Authentication Endpoints
 
-`composer create-project codeigniter4/appstarter` then `composer update` whenever
-there is a new release of the framework.
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :---: |
+| `POST` | `/api/auth/register` | Create a new user account | No |
+| `POST` | `/api/auth/login` | Log in and start session | No |
+| `POST` | `/api/auth/logout` | Log out and destroy session | Yes |
+| `GET` | `/api/auth/me` | Get current logged-in user details | Yes |
 
-When updating, check the release notes to see if there are any changes you might need to apply
-to your `app` folder. The affected files can be copied or merged from
-`vendor/codeigniter4/framework/app`.
+### Registration Payload (Multipart/Form-Data)
+- `username`, `email`, `password`, `first_name`, `last_name`, `dob`, `sex`
 
-## Setup
+---
 
-Copy `env` to `.env` and tailor for your app, specifically the baseURL
-and any database settings.
+## 📝 Post & Feed Endpoints
 
-## Important Change with index.php
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :---: |
+| `GET` | `/api/posts` | Fetch personalized news feed | Yes |
+| `POST` | `/api/posts` | Create a new post (text/media) | Yes |
+| `GET` | `/api/posts/{id}` | View single post details | Yes |
+| `DELETE` | `/api/posts/{id}` | Delete your own post | Yes |
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+### Create Post Payload (Multipart/Form-Data)
+- `content`: (String) Text content.
+- `visibility`: `public`, `followers`, or `private`.
+- `media`: (File) Optional Image or Video.
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+---
 
-**Please** read the user guide for a better explanation of how CI4 works!
+## ❤️ Social & Interaction Endpoints
 
-## Repository Management
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :---: |
+| `POST` | `/api/posts/{id}/like` | Toggle Like/Unlike on a post | Yes |
+| `POST` | `/api/posts/{id}/comment` | Add a comment to a post | Yes |
+| `POST` | `/api/posts/{id}/repost` | Repost content with optional quote | Yes |
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
+### Comment Payload
+- `comment_text`: (String)
 
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
+---
 
-## Server Requirements
+## 👥 User & Network Endpoints
 
-PHP version 8.2 or higher is required, with the following extensions installed:
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :---: |
+| `GET` | `/api/users/search?q=...` | Search users by name/email | No |
+| `GET` | `/api/users/{username}` | View user profile and their posts | No |
+| `POST` | `/api/users/update` | Update bio or profile picture | Yes |
+| `POST` | `/api/users/{id}/follow` | Follow/Unfollow a user | Yes |
+| `POST` | `/api/users/{id}/block` | Block/Unblock a user | Yes |
+| `GET` | `/api/users/{id}/stats` | Get follower/following counts | Yes |
 
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
+---
 
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - The end of life date for PHP 8.1 was December 31, 2025.
-> - If you are still using below PHP 8.2, you should upgrade immediately.
-> - The end of life date for PHP 8.2 will be December 31, 2026.
+## 🛡️ Security Features
+- **Bcrypt Hashing**: Secure password storage.
+- **CSRF Ready**: Framework-level protection available.
+- **SQLi Protection**: All queries utilize CI4 Models with prepared statements.
+- **Access Control**: Middleware (Filters) protects sensitive endpoints.
+- **Ownership Validation**: Users can only modify/delete their own data.
 
-Additionally, make sure that the following extensions are enabled in your PHP:
+## 📂 Uploads Path
+- **Posts**: `/public/uploads/posts/`
+- **Profiles**: `/public/uploads/profiles/`
 
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+---
+*Built with ❤️ for the Atmo Project.*
