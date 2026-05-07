@@ -2,7 +2,7 @@
 
 Welcome to the backend API for **Atmo**, a modern social media platform. This API is built using **CodeIgniter 4** and provides robust endpoints for authentication, social networking, and content management.
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 - PHP 8.1+
