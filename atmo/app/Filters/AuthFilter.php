@@ -26,18 +26,26 @@ class AuthFilter implements FilterInterface
      */
     public function before(RequestInterface $request, $arguments = null)
     {
+        // --- ADDED FOR WEB SUPPORT ---
+        // Check if user is logged in via Session first
+        if (session()->get('logged_in')) {
+            $request->user_id = session()->get('user_id');
+            return;
+        }
+        // -----------------------------
+
         $header = $request->getServer('HTTP_AUTHORIZATION');
         if (!$header) {
-            return service('response')
-                ->setJSON(['status' => 'error', 'message' => 'Token Required'])
-                ->setStatusCode(401);
+            // --- MODIFIED FOR WEB REDIRECT ---
+            // Instead of just failing, redirect to login if it's a browser request
+            return redirect()->to('/');
         }
 
         $token = null;
 
         // extract the token from the header
         if (!empty($header)) {
-            if (preg_match('/Bearer\s(\S+)/', $header, $matches)) {
+            if (preg_match('/Bearer\\s(\\S+)/', $header, $matches)) {
                 $token = $matches[1];
             }
         }

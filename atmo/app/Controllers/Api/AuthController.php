@@ -42,12 +42,8 @@ class AuthController extends BaseController
 
     public function login()
     {
-        $id = $this->request->getVar('identifier'); // email or username
+        $id       = $this->request->getVar('id'); // Email or Username
         $password = $this->request->getVar('password');
-
-        if (empty($id) || empty($password)) {
-            return $this->fail('Username/Email and Password are required');
-        }
 
         $userModel = new UserModel();
         $user = $userModel->where('email', $id)->orWhere('username', $id)->first();
@@ -55,6 +51,16 @@ class AuthController extends BaseController
         if (!$user || !password_verify($password, $user['password'])) {
             return $this->fail('Invalid credentials');
         }
+
+        // --- ADDED FOR WEB SESSION SUPPORT ---
+        $sessionData = [
+            'user_id'    => $user['id'],
+            'username'   => $user['username'],
+            'email'      => $user['email'],
+            'logged_in'  => true,
+        ];
+        session()->set($sessionData);
+        // -------------------------------------
 
         $key = env('JWT_SECRET');
         $expiry = env('JWT_EXPIRY', 3600);
@@ -79,8 +85,10 @@ class AuthController extends BaseController
 
     public function logout()
     {
-        // JWT is stateless, logout is handled by client deleting the token
-        return $this->respond(['status' => 'success', 'message' => 'Please delete your token on the client side']);
+        // --- ADDED FOR WEB LOGOUT ---
+        session()->destroy();
+        // ----------------------------
+        return $this->respond(['status' => 'success', 'message' => 'Logged out successfully']);
     }
 
     public function me()
@@ -90,13 +98,9 @@ class AuthController extends BaseController
         
         $userModel = new UserModel();
         $user = $userModel->find($userId);
+        
+        if ($user) unset($user['password']);
 
-        if (!$user) {
-            return $this->failNotFound('User not found');
-        }
-
-        unset($user['password']);
-
-        return $this->respond(['status' => 'success', 'user' => $user]);
+        return $this->respond($user);
     }
 }
