@@ -21,14 +21,18 @@ class PostModel extends Model
     protected array $castHandlers = [];
 
     // Dates
-    protected $useTimestamps = false;
+    protected $useTimestamps = true;
     protected $dateFormat    = 'datetime';
     protected $createdField  = 'created_at';
-    protected $updatedField  = 'updated_at';
+    protected $updatedField  = '';
     protected $deletedField  = 'deleted_at';
 
     // Validation
-    protected $validationRules      = [];
+    protected $validationRules      = [
+        'user_id'    => 'required|integer',
+        'visibility' => 'required|in_list[public,followers,private]',
+        'media_type' => 'required|in_list[text,image,video]'
+    ];
     protected $validationMessages   = [];
     protected $skipValidation       = false;
     protected $cleanValidationRules = true;

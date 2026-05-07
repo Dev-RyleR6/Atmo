@@ -21,14 +21,22 @@ class UserModel extends Model
     protected array $castHandlers = [];
 
     // Dates
-    protected $useTimestamps = false;
+    protected $useTimestamps = true;
     protected $dateFormat    = 'datetime';
     protected $createdField  = 'created_at';
-    protected $updatedField  = 'updated_at';
+    protected $updatedField  = '';
     protected $deletedField  = 'deleted_at';
 
     // Validation
-    protected $validationRules      = [];
+    protected $validationRules      = [
+        'username'   => 'required|min_length[3]|max_length[50]|is_unique[users.username,id,{id}]',
+        'email'      => 'required|valid_email|is_unique[users.email,id,{id}]',
+        'password'   => 'required|min_length[8]',
+        'first_name' => 'required',
+        'last_name'  => 'required',
+        'dob'        => 'required|valid_date',
+        'sex'        => 'required|in_list[Male,Female,Other,Prefer not to say]'
+    ];
     protected $validationMessages   = [];
     protected $skipValidation       = false;
     protected $cleanValidationRules = true;

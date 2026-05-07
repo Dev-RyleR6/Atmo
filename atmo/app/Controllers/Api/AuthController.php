@@ -14,26 +14,12 @@ class AuthController extends BaseController
 
     public function register()
     {
-        $rules = [
-            'username'   => 'required|min_length[3]|max_length[50]|is_unique[users.username]',
-            'email'      => 'required|valid_email|is_unique[users.email]',
-            'password'   => 'required|min_length[8]',
-            'first_name' => 'required',
-            'last_name'  => 'required',
-            'dob'        => 'required|valid_date',
-            'sex'        => 'required|in_list[Male,Female,Other,Prefer not to say]'
-        ];
-
-        if (!$this->validate($rules)) {
-            return $this->fail($this->validator->getErrors());
-        }
-
         $userModel = new UserModel();
-
+        
         $data = [
             'username'   => $this->request->getVar('username'),
             'email'      => $this->request->getVar('email'),
-            'password'   => password_hash($this->request->getVar('password'), PASSWORD_DEFAULT),
+            'password'   => $this->request->getVar('password'), // Will be hashed in beforeInsert hook or manually
             'first_name' => $this->request->getVar('first_name'),
             'last_name'  => $this->request->getVar('last_name'),
             'dob'        => $this->request->getVar('dob'),
@@ -42,11 +28,16 @@ class AuthController extends BaseController
             'bio'        => $this->request->getVar('bio') ?? ''
         ];
 
-        if ($userModel->insert($data)) {
-            return $this->respondCreated(['status' => 'success', 'message' => 'User registered successfully']);
+        // Hash password before saving
+        if (!empty($data['password'])) {
+            $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
         }
 
-        return $this->fail('Failed to register user');
+        if (!$userModel->insert($data)) {
+            return $this->fail($userModel->errors());
+        }
+
+        return $this->respondCreated(['status' => 'success', 'message' => 'User registered successfully']);
     }
 
     public function login()
