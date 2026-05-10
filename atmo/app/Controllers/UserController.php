@@ -72,8 +72,13 @@ class UserController extends BaseController
             'dob'         => 'permit_empty|valid_date',
             'sex'         => 'permit_empty|in_list[Male,Female,Other,Prefer not to say]',
             'bio'         => 'permit_empty|string|max_length[500]',
-            'profile_pic' => 'uploaded[profile_pic]|max_size[profile_pic,2048]|is_image[profile_pic]|permit_empty',
         ];
+
+        $pic = $this->request->getFile('profile_pic');
+        if ($pic && $pic->isValid()) {
+            $rules['profile_pic'] = 'max_size[profile_pic,10240]|is_image[profile_pic]';
+        }
+
 
         if (!$this->validate($rules)) {
             return redirect()->back()->with('errors', $this->validator->getErrors());
@@ -91,20 +96,27 @@ class UserController extends BaseController
         }
 
         $file = $this->request->getFile('profile_pic');
-        if ($file && $file->isValid() && !$file->hasMoved()) {
-            $newName = $file->getRandomName();
-            $file->move(FCPATH . 'uploads/profiles', $newName);
-            $data['profile_pic'] = 'uploads/profiles/' . $newName;
+        if ($file && $file->getError() !== UPLOAD_ERR_NO_FILE) {
+            if (!$file->isValid()) {
+                return redirect()->back()->with('error', $file->getErrorString());
+            }
+            if (!$file->hasMoved()) {
+                $newName = $file->getRandomName();
+                $file->move(FCPATH . 'uploads/profiles', $newName);
+                $data['profile_pic'] = 'uploads/profiles/' . $newName;
+            }
         }
 
         if (empty($data)) {
             return redirect()->back()->with('success', 'Nothing to update');
         }
 
-        if ($userModel->update($userId, $data)) {
+        if ($userModel->skipValidation(true)->update($userId, $data)) {
             return redirect()->back()->with('success', 'Profile updated successfully.');
         }
 
-        return redirect()->back()->with('error', 'Failed to update profile');
+        // Fallback trace
+        $dbError = $userModel->errors() ?: ['Unknown DB error occurred during update.'];
+        return redirect()->back()->with('errors', $dbError);
     }
 }

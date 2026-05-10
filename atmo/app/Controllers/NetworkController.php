@@ -19,19 +19,19 @@ class NetworkController extends BaseController
 
         if ($existing) {
             $followModel->where('follower_id', $followerId)->where('followed_id', $followedId)->delete();
-            return redirect()->back()->with('success', 'Unfollowed');
+            return redirect()->back()->with('success', 'Unfollowed User');
         } else {
-            $followModel->insert(['follower_id' => $followerId, 'followed_id' => $followedId]);
+            $followModel->skipValidation(true)->insert(['follower_id' => $followerId, 'followed_id' => $followedId]);
             
             // Send notification
             $notifModel = new NotificationModel();
-            $notifModel->insert([
+            $notifModel->skipValidation(true)->insert([
                 'recipient_id' => $followedId,
                 'sender_id' => $followerId,
                 'type' => 'follow'
             ]);
 
-            return redirect()->back()->with('success', 'Followed');
+            return redirect()->back()->with('success', 'Followed User');
         }
     }
 }

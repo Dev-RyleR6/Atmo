@@ -86,6 +86,45 @@
                         <span class="text-muted small">@<?= esc($user['username']) ?> • <?= date('M d', strtotime($postBody['created_at'])) ?></span>
                     </div>
                 </div>
+                <!-- Post Options -->
+                <div class="dropdown">
+                    <i class="bi bi-three-dots text-muted fs-5" style="cursor:pointer;" data-bs-toggle="dropdown"></i>
+                    <ul class="dropdown-menu dropdown-menu-end glass-panel" style="background: var(--bg-color); border: 1px solid var(--glass-border); padding: 8px; min-width: 150px;">
+                        <li>
+                            <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editModal<?= $postBody['id'] ?>" style="color: var(--text-primary); border-radius: 6px;">
+                                <i class="bi bi-pencil-square me-2"></i> Edit
+                            </a>
+                        </li>
+                        <li>
+                            <form action="<?= site_url('posts/delete/'.$postBody['id']) ?>" method="POST" onsubmit="return confirm('Are you sure you want to delete this post?');" class="m-0 p-0">
+                                <button type="submit" class="dropdown-item text-danger" style="border-radius: 6px;">
+                                    <i class="bi bi-trash-fill me-2"></i> Delete
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Edit Modal -->
+            <div class="modal fade" id="editModal<?= $postBody['id'] ?>" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content glass-panel" style="background: var(--bg-color);">
+                        <div class="modal-header border-0 pb-0">
+                            <h5 class="modal-title fw-bold">Edit Post</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form action="<?= site_url('posts/edit/'.$postBody['id']) ?>" method="POST">
+                            <div class="modal-body">
+                                <textarea name="content" class="glass-input" rows="4" style="width: 100%; resize: none;"><?= esc($postBody['content']) ?></textarea>
+                            </div>
+                            <div class="modal-footer border-0 pt-0">
+                                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="glass-btn">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
 
             <p class="mb-3" style="font-size: 1.05rem; line-height: 1.5; white-space: pre-wrap; color: var(--text-primary);"><?= esc($postBody['content']) ?></p>

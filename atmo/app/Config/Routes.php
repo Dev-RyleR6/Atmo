@@ -16,9 +16,10 @@ $routes->get('logout', 'AuthController::logoutAction');
 
 // Protected Routes (require auth web filter)
 $routes->group('', ['filter' => 'auth_web'], function($routes) {
-    // Feed
     $routes->get('feed', 'PostController::index');
     $routes->post('posts/create', 'PostController::create');
+    $routes->post('posts/edit/(:num)', 'PostController::edit/$1');
+    $routes->post('posts/delete/(:num)', 'PostController::delete/$1');
     
     // Profile
     $routes->get('profile', 'UserController::profile');
