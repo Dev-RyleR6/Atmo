@@ -3,69 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= esc($title ?? 'Atmo - Social Media') ?></title>
-    <!-- Bootstrap CSS -->
+    <title><?= esc($title ?? 'Atmo - Premium Social Media') ?></title>
+    <!-- Bootstrap CSS (Reset/Grid base only) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
-        body { background-color: #f8f9fa; }
-        [data-bs-theme="dark"] body { background-color: #121212; }
-    </style>
+    <!-- Our Glassmorphism Override -->
+    <link href="<?= base_url('css/glass.css') ?>" rel="stylesheet">
 </head>
 <body>
 
 <?php if (session()->has('user_id')): ?>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-  <div class="container">
-    <a class="navbar-brand" href="<?= site_url('feed') ?>">
-      <i class="bi bi-globe fs-4 text-primary"></i> Atmo
-    </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="mainNav">
-      <form class="d-flex mx-auto col-md-5" action="<?= site_url('users/search') ?>" method="GET">
-        <input class="form-control me-2 rounded-pill" type="search" name="q" placeholder="Search users by name, email..." value="<?= esc(request()->getGet('q') ?? '') ?>">
-        <button class="btn btn-outline-primary rounded-pill" type="submit">Search</button>
-      </form>
-      <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-        <li class="nav-item"><a class="nav-link" href="<?= site_url('feed') ?>"><i class="bi bi-house"></i> Home</a></li>
-        <li class="nav-item"><a class="nav-link" href="<?= site_url('profile') ?>"><i class="bi bi-person"></i> Profile</a></li>
-        <li class="nav-item"><a class="nav-link text-danger" href="<?= site_url('logout') ?>"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
-      </ul>
-    </div>
-  </div>
-</nav>
-<?php endif; ?>
-
-<div class="container my-4">
-    <?php if (session()->getFlashdata('success')): ?>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <?= esc(session()->getFlashdata('success')) ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    <?php endif; ?>
-    
-    <?php if (session()->getFlashdata('error')): ?>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <?= esc(session()->getFlashdata('error')) ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    <?php endif; ?>
-
-    <?php if (session()->getFlashdata('errors') && is_array(session()->getFlashdata('errors'))): ?>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <ul class="mb-0">
-            <?php foreach (session()->getFlashdata('errors') as $error): ?>
-                <li><?= esc($error) ?></li>
-            <?php endforeach; ?>
+    <div class="atmo-layout">
+        <!-- Left Sidebar: Navbar -->
+        <aside class="sidebar-left">
+            <h3 class="fw-bold mb-1" style="padding-left: 20px;">Aether</h3>
+            <p class="text-muted small" style="padding-left: 20px;">Premium Feed</p>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a class="nav-link <?= current_url() == site_url('feed') ? 'active' : '' ?>" href="<?= site_url('feed') ?>">
+                        <i class="bi <?= current_url() == site_url('feed') ? 'bi-house-door-fill' : 'bi-house-door' ?>"></i> 
+                        <span class="nav-label">Home</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= current_url() == site_url('profile') ? 'active' : '' ?>" href="<?= site_url('profile') ?>">
+                        <i class="bi <?= current_url() == site_url('profile') ? 'bi-person-fill' : 'bi-person' ?>"></i> 
+                        <span class="nav-label">Profile</span>
+                    </a>
+                </li>
+                <li class="nav-item mt-4">
+                    <a class="nav-link text-danger" href="<?= site_url('logout') ?>">
+                        <i class="bi bi-box-arrow-right"></i> 
+                        <span class="nav-label">Logout</span>
+                    </a>
+                </li>
             </ul>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    <?php endif; ?>
 
-    <?= $this->renderSection('content') ?>
-</div>
+            <!-- Authenticated User Tag -->
+            <div style="position: absolute; bottom: 20px; left: 20px; display: flex; align-items: center; gap: 12px;">
+                <div class="rounded-circle bg-secondary" style="width: 40px; height: 40px; overflow: hidden;">
+                    <!-- Use default since we don't have user object passed to layout by default, or just icon -->
+                    <i class="bi bi-person-circle fs-2 text-white"></i>
+                </div>
+                <div class="nav-label">
+                    <div class="fw-bold" style="font-size: 0.9rem;"><?= esc(session()->get('username')) ?></div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center Feed -->
+        <main class="center-feed">
+            <?php if (session()->getFlashdata('success')): ?>
+                <div class="alert alert-success alert-dismissible fade show" role="alert" style="border-radius: 12px; background: rgba(25, 135, 84, 0.2); border-color: rgba(25, 135, 84, 0.4); color: white;">
+                    <?= esc(session()->getFlashdata('success')) ?>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <?php endif; ?>
+            
+            <?php if (session()->getFlashdata('error')): ?>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert" style="border-radius: 12px; background: rgba(220, 53, 69, 0.2); border-color: rgba(220, 53, 69, 0.4); color: white;">
+                    <?= esc(session()->getFlashdata('error')) ?>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <?php endif; ?>
+
+            <?php if (session()->getFlashdata('errors')): ?>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert" style="border-radius: 12px; background: rgba(220, 53, 69, 0.2); border-color: rgba(220, 53, 69, 0.4); color: white;">
+                    <ul class="mb-0">
+                    <?php foreach (session()->getFlashdata('errors') as $error): ?>
+                        <li><?= esc($error) ?></li>
+                    <?php endforeach; ?>
+                    </ul>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <?php endif; ?>
+
+            <?= $this->renderSection('content') ?>
+        </main>
+
+        <!-- Right Sidebar (Backend Data Focus) -->
+        <aside class="sidebar-right">
+            <!-- Search Widget -->
+            <div class="glass-panel" style="padding: 10px 16px; border-radius: 999px; display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-search text-muted"></i>
+                <form action="<?= site_url('users/search') ?>" method="GET" style="width: 100%;">
+                    <input type="search" name="q" class="glass-input" placeholder="Search Aether" value="<?= esc(request()->getGet('q') ?? '') ?>">
+                </form>
+            </div>
+            
+            <div class="mt-4 px-3 text-muted" style="font-size: 0.85rem;">
+                Powered by Atmo Backend Engine &copy; <?= date('Y') ?>
+            </div>
+        </aside>
+    </div>
+
+<?php else: ?>
+    <!-- Fallback Layout for Login / Register -->
+    <div class="container my-5">
+        <?php if (session()->getFlashdata('success')): ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert" style="border-radius: 12px; background: rgba(25, 135, 84, 0.2); border-color: rgba(25, 135, 84, 0.4); color: white;">
+                <?= esc(session()->getFlashdata('success')) ?>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
+        <?php if (session()->getFlashdata('error')): ?>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert" style="border-radius: 12px; background: rgba(220, 53, 69, 0.2); border-color: rgba(220, 53, 69, 0.4); color: white;">
+                <?= esc(session()->getFlashdata('error')) ?>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
+        <?php if (session()->getFlashdata('errors') && is_array(session()->getFlashdata('errors'))): ?>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert" style="border-radius: 12px; background: rgba(220, 53, 69, 0.2); border-color: rgba(220, 53, 69, 0.4); color: white;">
+                <ul class="mb-0">
+                <?php foreach (session()->getFlashdata('errors') as $error): ?>
+                    <li><?= esc($error) ?></li>
+                <?php endforeach; ?>
+                </ul>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
+        
+        <?= $this->renderSection('content') ?>
+    </div>
+<?php endif; ?>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
