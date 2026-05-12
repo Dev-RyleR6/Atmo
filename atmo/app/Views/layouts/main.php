@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= esc($title ?? 'Atmo - Premium Social Media') ?></title>
+    <title><?= esc($title ?? 'Atmo - Create Your Own Atmosphere') ?></title>
+    <link rel="icon" href="<?= base_url('atmo_logo.png') ?>" type="image/x-icon">
     <!-- Bootstrap CSS (Reset/Grid base only) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -19,7 +20,7 @@
             <!-- Left Sidebar: Navbar -->
             <aside class="sidebar-left">
                 <h3 class="fw-bold mb-1" style="padding-left: 20px;">Atmo</h3>
-                <p class="text-muted small" style="padding-left: 20px;">Own your Atmosphere</p>
+                <p class="text-muted small" style="padding-left: 20px;">Own Your Atmosphere</p>
 
                 <ul class="nav-menu">
                     <li class="nav-item">
@@ -46,13 +47,13 @@
                 </ul>
 
                 <!-- Authenticated User Tag -->
-                <div style="position: absolute; bottom: 20px; left: 20px; display: flex; align-items: center; gap: 12px;">
-                    <div class="rounded-circle bg-secondary" style="width: 40px; height: 40px; overflow: hidden;">
-                        <!-- Use default since we don't have user object passed to layout by default, or just icon -->
-                        <i class="bi bi-person-circle fs-2 text-white"></i>
+                <div style="margin-top: auto; padding: 20px; display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--glass-border);">
+                    <div class="rounded-circle bg-secondary d-flex justify-content-center align-items-center" style="width: 40px; height: 40px; overflow: hidden; border: 1px solid var(--glass-border);">
+                        <i class="bi bi-person-circle fs-3 text-white"></i>
                     </div>
                     <div class="nav-label">
                         <div class="fw-bold" style="font-size: 0.9rem;"><?= esc(session()->get('username')) ?></div>
+                        <div class="text-muted" style="font-size: 0.75rem;">@<?= esc(session()->get('username')) ?></div>
                     </div>
                 </div>
             </aside>
@@ -145,6 +146,7 @@
     <?php endif; ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="<?= base_url('js/feed.js') ?>"></script>
 </body>
 
 </html>

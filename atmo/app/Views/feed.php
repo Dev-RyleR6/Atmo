@@ -3,22 +3,33 @@
 <?= $this->section('content') ?>
 
 <!-- Post Creation Area -->
-<div class="glass-panel composer">
+<div class="glass-panel composer mb-4">
     <form action="<?= site_url('posts/create') ?>" method="POST" enctype="multipart/form-data">
-        <div class="composer-top">
-            <div class="rounded-circle bg-secondary d-flex justify-content-center align-items-center" style="width: 40px; height: 40px; overflow: hidden; flex-shrink: 0;">
-                <i class="bi bi-person-fill text-white fs-4"></i>
+    <div class="composer-top d-flex align-items-start gap-3 mb-3">
+            <div class="rounded-circle bg-secondary d-flex justify-content-center align-items-center shadow-sm" style="width: 48px; height: 48px; overflow: hidden; flex-shrink: 0; border: 2px solid var(--glass-border);">
+                <i class="bi bi-person-fill text-white fs-3"></i>
             </div>
-            <input type="text" name="content" class="glass-input" placeholder="What's on your mind?" autocomplete="off">
+            <div class="flex-grow-1">
+                <textarea name="content" class="glass-input" placeholder="What's on your mind, <?= esc(session()->get('username')) ?>?" rows="1" style="resize: none; overflow: hidden; min-height: 48px; padding-top: 12px; width: 100%;"></textarea>
+            </div>
         </div>
-        <div class="composer-toolbar">
-            <div class="d-flex gap-3 text-muted">
-                <label style="cursor: pointer;" title="Attach Image/Video">
-                    <i class="bi bi-image fs-5"></i>
+
+        <!-- Media Preview Area (JS Managed) -->
+        <div class="media-preview-container mb-2" style="display: none;">
+            <button type="button" class="remove-media-btn"><i class="bi bi-x-lg"></i></button>
+            <img src="" class="media-preview">
+        </div>
+
+        <div class="composer-toolbar d-flex justify-content-between align-items-center mt-2">
+            <div class="d-flex gap-2 align-items-center">
+                <label class="action-btn" style="cursor: pointer;" title="Attach Image/Video">
+                    <i class="bi bi-image"></i>
+                    <span class="d-none d-md-inline">Media</span>
                     <input type="file" name="media" accept="image/*,video/*" style="display: none;">
                 </label>
-                <label style="cursor: pointer;" title="Visibility">
-                    <select name="visibility" style="background: transparent; color: inherit; border: none; outline: none; cursor: pointer;">
+                <label class="action-btn" title="Visibility">
+                    <i class="bi bi-globe-americas"></i>
+                    <select name="visibility" style="background: transparent; color: inherit; border: none; outline: none; cursor: pointer; font-size: 0.9rem;">
                         <option value="public" style="color: #000;">Public</option>
                         <option value="followers" style="color: #000;">Followers</option>
                         <option value="private" style="color: #000;">Private</option>
@@ -30,125 +41,146 @@
     </form>
 </div>
 
-<!-- Feed Header -->
-<div class="mb-3 d-flex gap-3 fw-bold" style="padding: 0 10px;">
-    <span class="text-white pb-2" style="border-bottom: 2px solid var(--accent-color); cursor:pointer;">For You</span>
+<!-- Feed Header Tabs -->
+<div class="feed-tabs d-flex gap-2 mb-4">
+    <div class="feed-tab active px-4 py-2">For You</div>
+    <div class="feed-tab px-4 py-2">Following</div>
 </div>
 
 <!-- Feed List -->
-<?php if(empty($posts)): ?>
-    <div class="glass-panel mt-3 text-center text-muted py-5">
-        No posts to show. Start following some users or make your first post!
-    </div>
-<?php else: ?>
-    <?php foreach($posts as $post): ?>
-        <div class="glass-panel mb-4" style="border-radius: var(--border-radius); padding: 16px 20px;">
-            <!-- Repost Header -->
+<div class="mt-2">
+    <?php if(empty($posts)): ?>
+    <div class="glass-panel text-center text-muted py-5 mt-3">
+            <i class="bi bi-wind fs-1 mb-3 d-block opacity-25"></i>
+            <p>No posts to show yet. <br>Start following users to fill your atmosphere!</p>
+        </div>
+    <?php else: ?>
+        <?php foreach($posts as $post): ?>
+            <!-- Repost Context -->
             <?php if($post['type'] == 'repost'): ?>
-                <div class="text-muted small mb-2 d-flex align-items-center gap-2 fw-semibold">
-                    <i class="bi bi-arrow-repeat"></i> <?= esc($post['reposted_by']['username'] ?? 'Unknown User') ?> reposted
+                <div class="text-muted small mb-2 d-flex align-items-center gap-2 fw-semibold" style="padding: 0 10px; margin-left: 56px;">
+                    <i class="bi bi-arrow-repeat fs-6"></i> <?= esc($post['reposted_by']['username'] ?? 'Someone') ?> reposted
                 </div>
                 <?php $postBody = $post['original_post']; ?>
             <?php else: ?>
                 <?php $postBody = $post; ?>
             <?php endif; ?>
 
-            <!-- User Info -->
-            <div class="d-flex align-items-center mb-3">
-                <?php $pic = $postBody['user']['profile_pic'] ?? 'default_user.png'; ?>
-                <img src="<?= base_url(esc($pic)) ?>" class="rounded-circle me-3" width="48" height="48" alt="profile" style="object-fit:cover;" onerror="this.src='https://via.placeholder.com/48';">
-                <div class="flex-grow-1">
-                    <div class="d-flex align-items-baseline gap-2">
-                        <h6 class="mb-0 fw-bold fs-6" style="color: var(--text-primary);"><?= esc($postBody['user']['first_name'].' '.$postBody['user']['last_name']) ?> <i class="bi bi-patch-check-fill text-muted small"></i></h6>
-                        <span class="text-muted small">@<?= esc($postBody['user']['username']) ?> • <?php
-                            $diff = time() - strtotime($postBody['created_at']);
-                            if($diff < 3600) echo floor($diff/60).'m';
-                            else if($diff < 86400) echo floor($diff/3600).'h';
-                            else echo floor($diff/86400).'d';
-                        ?></span>
-                    </div>
-                </div>
-                <!-- Post Options -->
-                <div class="dropdown">
-                    <i class="bi bi-three-dots text-muted fs-5" style="cursor:pointer;" data-bs-toggle="dropdown"></i>
-                    <ul class="dropdown-menu dropdown-menu-end glass-panel" style="background: var(--bg-color); border: 1px solid var(--glass-border); padding: 8px; min-width: 150px;">
-                        <?php if ($postBody['user_id'] == session()->get('user_id')): ?>
-                            <li>
-                                <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editModal<?= $postBody['id'] ?>" style="color: var(--text-primary); border-radius: 6px;">
-                                    <i class="bi bi-pencil-square me-2"></i> Edit
-                                </a>
-                            </li>
-                            <li>
-                                <form action="<?= site_url('posts/delete/'.$postBody['id']) ?>" method="POST" onsubmit="return confirm('Are you sure you want to delete this post?');" class="m-0 p-0">
-                                    <button type="submit" class="dropdown-item text-danger" style="border-radius: 6px;">
-                                        <i class="bi bi-trash-fill me-2"></i> Delete
-                                    </button>
-                                </form>
-                            </li>
-                        <?php else: ?>
-                            <li>
-                                <a class="dropdown-item text-muted" href="#" style="border-radius: 6px;">
-                                    <i class="bi bi-flag me-2"></i> Report
-                                </a>
-                            </li>
-                        <?php endif; ?>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Edit Modal -->
-            <?php if ($postBody['user_id'] == session()->get('user_id')): ?>
-            <div class="modal fade" id="editModal<?= $postBody['id'] ?>" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content glass-panel" style="background: var(--bg-color);">
-                        <div class="modal-header border-0 pb-0">
-                            <h5 class="modal-title fw-bold">Edit Post</h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="glass-panel mb-4" style="border-radius: var(--border-radius); padding: 16px 20px;">
+                <!-- Post Header -->
+                <div class="d-flex align-items-center mb-3">
+                    <img src="<?= base_url(esc($postBody['user']['profile_pic'] ?? 'default_user.png')) ?>" class="rounded-circle me-3" width="48" height="48" onerror="this.src='https://via.placeholder.com/48';">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-baseline gap-2">
+                            <a href="<?= site_url('profile/'.esc($postBody['user']['username'])) ?>" class="text-decoration-none">
+                                <h6 class="mb-0 fw-bold fs-6" style="color: var(--text-primary);"><?= esc($postBody['user']['first_name'].' '.$postBody['user']['last_name']) ?> 
+                                    <?php if(!empty($postBody['user']['is_verified'])): ?>
+                                        <i class="bi bi-patch-check-fill text-primary small"></i>
+                                    <?php endif; ?>
+                                </h6>
+                            </a>
+                            <span class="text-muted small">@<?= esc($postBody['user']['username']) ?> • 
+                                <span title="<?= date('M j, Y g:i A', strtotime($postBody['created_at'])) ?>">
+                                    <?php
+                                        $diff = time() - strtotime($postBody['created_at']);
+                                        if($diff < 60) echo 'just now';
+                                        else if($diff < 3600) echo floor($diff/60).'m';
+                                        else if($diff < 86400) echo floor($diff/3600).'h';
+                                        else echo floor($diff/86400).'d';
+                                    ?>
+                                </span>
+                            </span>
                         </div>
-                        <form action="<?= site_url('posts/edit/'.$postBody['id']) ?>" method="POST">
-                            <div class="modal-body">
-                                <textarea name="content" class="glass-input" rows="4" style="width: 100%; resize: none;"><?= esc($postBody['content']) ?></textarea>
-                            </div>
-                            <div class="modal-footer border-0 pt-0">
-                                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="glass-btn">Save Changes</button>
-                            </div>
-                        </form>
+                    </div>
+                    <!-- Post Options Dropdown -->
+                    <div class="dropdown">
+                        <i class="bi bi-three-dots text-muted fs-5" style="cursor:pointer;" data-bs-toggle="dropdown"></i>
+                        <ul class="dropdown-menu dropdown-menu-end glass-panel" style="background: var(--bg-color); border: 1px solid var(--glass-border); padding: 8px; min-width: 160px;">
+                            <?php if ($postBody['user_id'] == session()->get('user_id')): ?>
+                                <li>
+                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editModal<?= $postBody['id'] ?>" style="color: var(--text-primary); border-radius: 6px;">
+                                        <i class="bi bi-pencil-square me-2"></i> Edit
+                                    </a>
+                                </li>
+                                <li>
+                                    <form action="<?= site_url('posts/delete/'.$postBody['id']) ?>" method="POST" onsubmit="return confirm('Are you sure you want to delete this post?');" class="m-0 p-0">
+                                        <button type="submit" class="dropdown-item text-danger" style="border-radius: 6px;">
+                                            <i class="bi bi-trash-fill me-2"></i> Delete
+                                        </button>
+                                    </form>
+                                </li>
+                            <?php else: ?>
+                                <li>
+                                    <a class="dropdown-item" href="#" style="color: var(--text-primary); border-radius: 6px;">
+                                        <i class="bi bi-flag me-2"></i> Report
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+                        </ul>
                     </div>
                 </div>
-            </div>
-            <?php endif; ?>
 
-            <!-- Post Content -->
-            <p class="mb-3" style="font-size: 1.05rem; line-height: 1.5; white-space: pre-wrap; color: var(--text-primary);"><?= esc($postBody['content']) ?></p>
-
-            <!-- Media Attachment -->
-            <?php if(!empty($postBody['media_path'])): ?>
-                <?php if($postBody['media_type'] == 'image'): ?>
-                    <img src="<?= base_url(esc($postBody['media_path'])) ?>" class="media-attachment">
-                <?php elseif($postBody['media_type'] == 'video'): ?>
-                    <video controls class="media-attachment">
-                        <source src="<?= base_url(esc($postBody['media_path'])) ?>">
-                    </video>
+                <!-- Edit Modal -->
+                <?php if ($postBody['user_id'] == session()->get('user_id')): ?>
+                <div class="modal fade" id="editModal<?= $postBody['id'] ?>" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content glass-panel" style="background: var(--bg-color);">
+                            <div class="modal-header border-0 pb-0">
+                                <h5 class="modal-title fw-bold">Edit Post</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form action="<?= site_url('posts/edit/'.$postBody['id']) ?>" method="POST">
+                                <div class="modal-body">
+                                    <textarea name="content" class="glass-input" rows="4" style="width: 100%; resize: none;"><?= esc($postBody['content']) ?></textarea>
+                                </div>
+                                <div class="modal-footer border-0 pt-0">
+                                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="glass-btn">Save Changes</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
                 <?php endif; ?>
-            <?php endif; ?>
 
-            <!-- Interaction Bar -->
-            <div class="interaction-bar mt-3 pt-2 border-top" style="border-color: var(--glass-border) !important;">
-                <button class="action-btn">
-                    <i class="bi bi-heart"></i> <span>Like</span>
-                </button>
-                <button class="action-btn">
-                    <i class="bi bi-chat"></i> <span>Comment</span>
-                </button>
-                <form action="<?= site_url('posts/toggleRepost/'.$postBody['id']) ?>" method="POST" class="d-inline">
-                    <button type="submit" class="action-btn">
-                        <i class="bi bi-arrow-repeat"></i> <span>Repost</span>
+                <!-- Post Body Text -->
+                <p class="mb-3" style="font-size: 1.05rem; line-height: 1.5; white-space: pre-wrap; color: var(--text-primary);"><?= esc($postBody['content']) ?></p>
+
+                <!-- Post Media -->
+                <?php if(!empty($postBody['media_path'])): ?>
+                    <?php if($postBody['media_type'] == 'image'): ?>
+                        <img src="<?= base_url(esc($postBody['media_path'])) ?>" class="media-attachment">
+                    <?php elseif($postBody['media_type'] == 'video'): ?>
+                        <video controls class="media-attachment">
+                            <source src="<?= base_url(esc($postBody['media_path'])) ?>">
+                        </video>
+                    <?php endif; ?>
+                <?php endif; ?>
+
+                <!-- Interaction Bar -->
+                <div class="interaction-bar d-flex gap-3 align-items-center mt-3">
+                    <button class="action-btn comment-btn">
+                        <i class="bi bi-chat"></i>
+                        <span>24</span>
                     </button>
-                </form>
+                    <form action="<?= site_url('posts/toggleRepost/'.$postBody['id']) ?>" method="POST" class="m-0">
+                        <button type="submit" class="action-btn repost-btn">
+                            <i class="bi bi-arrow-repeat"></i>
+                            <span>12</span>
+                        </button>
+                    </form>
+                    <button class="action-btn like-btn">
+                        <i class="bi bi-heart"></i>
+                        <span>128</span>
+                    </button>
+                    <button class="action-btn">
+                        <i class="bi bi-share"></i>
+                    </button>
+                </div>
             </div>
-        </div>
-    <?php endforeach; ?>
-<?php endif; ?>
+
+        <?php endforeach; ?>
+    <?php endif; ?>
+</div>
 
 <?= $this->endSection() ?>
