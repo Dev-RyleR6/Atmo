@@ -26,6 +26,7 @@ $routes->group('', ['filter' => 'auth_web'], function($routes) {
     
     // Profile
     $routes->get('profile', 'UserController::profile');
+    $routes->get('profile/(:segment)', 'UserController::profile/$1');
     $routes->post('profile/update', 'UserController::updateProfile');
     
     // Social / Network

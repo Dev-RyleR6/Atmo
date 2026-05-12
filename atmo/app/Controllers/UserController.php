@@ -8,35 +8,52 @@ use App\Models\FollowModel;
 
 class UserController extends BaseController
 {
-    public function profile()
+    public function profile($username = null)
     {
-        $userId = session()->get('user_id');
+        $loggedInUserId = session()->get('user_id');
         $userModel = new UserModel();
         
-        $user = $userModel->find($userId);
+        if ($username) {
+            $user = $userModel->where('username', $username)->first();
+        } else {
+            $user = $userModel->find($loggedInUserId);
+        }
 
         if (!$user) {
-            return redirect()->to(site_url('login'))->with('error', 'User not found');
+            return redirect()->to(site_url('feed'))->with('error', 'User not found');
         }
 
         unset($user['password']);
+        
+        $isOwnProfile = $user['id'] == $loggedInUserId;
 
         // Fetch user's posts
         $postModel = new PostModel();
         $posts = $postModel->where('user_id', $user['id'])
+                           ->where('visibility !=', 'private')
                            ->orderBy('created_at', 'DESC')
                            ->findAll();
                            
         // Get Follower / Following count
         $followModel = new FollowModel();
-        $followersCount = $followModel->where('followed_id', $userId)->countAllResults();
-        $followingCount = $followModel->where('follower_id', $userId)->countAllResults();
+        $followersCount = $followModel->where('followed_id', $user['id'])->countAllResults();
+        $followingCount = $followModel->where('follower_id', $user['id'])->countAllResults();
+        
+        // Check if logged in user follows this profile
+        $isFollowing = false;
+        if ($loggedInUserId && !$isOwnProfile) {
+            $isFollowing = $followModel->where('follower_id', $loggedInUserId)
+                                       ->where('followed_id', $user['id'])
+                                       ->first() ? true : false;
+        }
 
         $data = [
             'user' => $user,
             'posts' => $posts,
             'followers_count' => $followersCount,
-            'following_count' => $followingCount
+            'following_count' => $followingCount,
+            'is_own_profile' => $isOwnProfile,
+            'is_following' => $isFollowing
         ];
 
         return view('profile', $data);
