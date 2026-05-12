@@ -182,6 +182,157 @@
                     </video>
                 <?php endif; ?>
             <?php endif; ?>
+            
+            <!-- Interaction Bar -->
+            <div class="interaction-bar d-flex gap-3 align-items-center mt-3">
+                <form action="<?= site_url('posts/toggleLike/'.$postBody['id']) ?>" method="POST" class="m-0">
+                    <button type="submit" class="action-btn like-btn <?= $postBody['is_liked'] ? 'text-danger' : '' ?>">
+                        <i class="bi <?= $postBody['is_liked'] ? 'bi-heart-fill' : 'bi-heart' ?>"></i>
+                        <span><?= $postBody['like_count'] ?></span>
+                    </button>
+                </form>
+                <button class="action-btn comment-btn" data-bs-toggle="modal" data-bs-target="#commentModal<?= $postBody['id'] ?>">
+                    <i class="bi bi-chat"></i>
+                    <span><?= $postBody['comment_count'] ?></span>
+                </button>
+                <form action="<?= site_url('posts/toggleRepost/'.$postBody['id']) ?>" method="POST" class="m-0">
+                    <button type="submit" class="action-btn repost-btn <?= $postBody['is_reposted'] ? 'text-success' : '' ?>">
+                        <i class="bi bi-arrow-repeat"></i>
+                        <span><?= $postBody['repost_count'] ?></span>
+                    </button>
+                </form>
+                <button class="action-btn">
+                    <i class="bi bi-share"></i>
+                </button>
+            </div>
+            
+            <!-- Comments Section -->
+            <?php if(!empty($postBody['comments'])): ?>
+            <div class="comments-section">
+                <?php 
+                $commentsToShow = [];
+                if (count($postBody['comments']) >= 2) {
+                    $firstUserId = $postBody['comments'][0]['user_id'];
+                    $secondUserId = $postBody['comments'][1]['user_id'];
+                    
+                    if ($firstUserId === $secondUserId) {
+                        $commentsToShow = array_slice($postBody['comments'], 0, 1);
+                    } else {
+                        $commentsToShow = array_slice($postBody['comments'], 0, 2);
+                    }
+                } else {
+                    $commentsToShow = $postBody['comments'];
+                }
+                
+                foreach($commentsToShow as $comment): ?>
+                <div class="comment-item">
+                    <img src="<?= base_url(esc($comment['user']['profile_pic'] ?? '')) ?>" class="rounded-circle profile-pic-img flex-shrink-0" width="36" height="36" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
+                    <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center profile-pic-placeholder flex-shrink-0" style="width: 36px; height: 36px; overflow: hidden; border: 1px solid var(--glass-border);">
+                        <i class="bi bi-person-fill text-white fs-5"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-baseline gap-2 mb-1 flex-wrap">
+                            <a href="<?= site_url('profile/'.esc($comment['user']['username'] ?? 'unknown')) ?>" class="text-decoration-none">
+                                <span class="fw-bold" style="color: var(--text-primary); font-size: 0.9rem;"><?= esc(($comment['user']['first_name'] ?? 'Unknown').' '.($comment['user']['last_name'] ?? 'User')) ?></span>
+                            </a>
+                            <span class="text-muted" style="font-size: 0.8rem;">@<?= esc($comment['user']['username'] ?? 'unknown') ?></span>
+                            <span class="text-muted" style="font-size: 0.8rem;">• 
+                                <?php
+                                    $diff = time() - strtotime($comment['created_at']);
+                                    if($diff < 60) echo 'just now';
+                                    else if($diff < 3600) echo floor($diff/60).'m';
+                                    else if($diff < 86400) echo floor($diff/3600).'h';
+                                    else echo floor($diff/86400).'d';
+                                ?>
+                            </span>
+                        </div>
+                        <p class="mb-0" style="font-size: 0.95rem; line-height: 1.5; color: var(--text-primary); white-space: pre-wrap;"><?= esc($comment['comment_text']) ?></p>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+                <?php 
+                $showViewAll = false;
+                if (count($postBody['comments']) > 1) {
+                    $firstUserId = $postBody['comments'][0]['user_id'];
+                    $secondUserId = $postBody['comments'][1]['user_id'] ?? null;
+                    
+                    if ($firstUserId === $secondUserId) {
+                        $showViewAll = count($postBody['comments']) > 1;
+                    } else {
+                        $showViewAll = count($postBody['comments']) > 2;
+                    }
+                }
+                
+                if ($showViewAll): ?>
+                <button class="action-btn comment-btn mt-2" data-bs-toggle="modal" data-bs-target="#commentModal<?= $postBody['id'] ?>">
+                    View all <?= $postBody['comment_count'] ?> comments
+                </button>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+        </div>
+        
+        <!-- Comment Modal (outside post loop to avoid stacking issues) -->
+        <div class="modal fade" id="commentModal<?= $postBody['id'] ?>" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content glass-panel" style="background: var(--bg-color);">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title fw-bold">Comments</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <?php if(!empty($postBody['comments'])): ?>
+                        <div class="comments-list mb-3" style="max-height: 300px; overflow-y: auto;">
+                            <?php foreach($postBody['comments'] as $comment): ?>
+                            <div class="comment-item">
+                                <img src="<?= base_url(esc($comment['user']['profile_pic'] ?? '')) ?>" class="rounded-circle profile-pic-img flex-shrink-0" width="40" height="40" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
+                                <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center profile-pic-placeholder flex-shrink-0" style="width: 40px; height: 40px; overflow: hidden; border: 1px solid var(--glass-border);">
+                                    <i class="bi bi-person-fill text-white fs-5"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-baseline gap-2 mb-1 flex-wrap">
+                                        <a href="<?= site_url('profile/'.esc($comment['user']['username'] ?? 'unknown')) ?>" class="text-decoration-none">
+                                            <span class="fw-bold" style="color: var(--text-primary);"><?= esc(($comment['user']['first_name'] ?? 'Unknown').' '.($comment['user']['last_name'] ?? 'User')) ?></span>
+                                        </a>
+                                        <span class="text-muted" style="font-size: 0.85rem;">@<?= esc($comment['user']['username'] ?? 'unknown') ?></span>
+                                        <span class="text-muted" style="font-size: 0.8rem;">• 
+                                            <?php
+                                                $diff = time() - strtotime($comment['created_at']);
+                                                if($diff < 60) echo 'just now';
+                                                else if($diff < 3600) echo floor($diff/60).'m';
+                                                else if($diff < 86400) echo floor($diff/3600).'h';
+                                                else echo floor($diff/86400).'d';
+                                            ?>
+                                        </span>
+                                    </div>
+                                    <p class="mb-0" style="font-size: 1rem; line-height: 1.5; color: var(--text-primary); white-space: pre-wrap;"><?= esc($comment['comment_text']) ?></p>
+                                </div>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <?php else: ?>
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-chat-square-text fs-1 mb-2 opacity-25"></i>
+                            <p>No comments yet. Be the first!</p>
+                        </div>
+                        <?php endif; ?>
+                        <div class="comment-form-container">
+                            <form action="<?= site_url('posts/addComment/'.$postBody['id']) ?>" method="POST">
+                                <div class="d-flex gap-3 align-items-start">
+                                    <img src="<?= base_url(esc(session()->get('profile_pic') ?? '')) ?>" class="rounded-circle profile-pic-img flex-shrink-0" width="40" height="40" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
+                                    <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center profile-pic-placeholder flex-shrink-0" style="width: 40px; height: 40px; overflow: hidden; border: 1px solid var(--glass-border);">
+                                        <i class="bi bi-person-fill text-white fs-5"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <textarea name="comment_text" class="glass-input" rows="2" placeholder="Write a comment..." style="width: 100%; resize: none;"></textarea>
+                                    </div>
+                                    <button type="submit" class="glass-btn">Comment</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     <?php endforeach; ?>
 <?php endif; ?>

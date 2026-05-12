@@ -29,10 +29,45 @@ class UserController extends BaseController
 
         // Fetch user's posts
         $postModel = new PostModel();
+        $likeModel = new \App\Models\LikeModel();
+        $commentModel = new \App\Models\CommentModel();
+        $repostModel = new \App\Models\RepostModel();
+        $userModel = new UserModel();
+        
         $posts = $postModel->where('user_id', $user['id'])
                            ->where('visibility !=', 'private')
                            ->orderBy('created_at', 'DESC')
                            ->findAll();
+        
+        // Helper function to add social data to a post
+        $addSocialData = function(&$post) use ($likeModel, $commentModel, $repostModel, $loggedInUserId, $userModel) {
+            $postId = $post['id'];
+            $post['like_count'] = $likeModel->where('post_id', $postId)->countAllResults();
+            $post['comment_count'] = $commentModel->where('post_id', $postId)->countAllResults();
+            $post['repost_count'] = $repostModel->where('post_id', $postId)->countAllResults();
+            $post['is_liked'] = $loggedInUserId && $likeModel->where('user_id', $loggedInUserId)->where('post_id', $postId)->first() ? true : false;
+            $post['is_reposted'] = $loggedInUserId && $repostModel->where('user_id', $loggedInUserId)->where('post_id', $postId)->first() ? true : false;
+            
+            // Fetch comments with user data
+            $comments = $commentModel->where('post_id', $postId)
+                                     ->orderBy('created_at', 'ASC')
+                                     ->limit(10)
+                                     ->findAll();
+            foreach ($comments as &$comment) {
+                $commentUser = $userModel->find($comment['user_id']);
+                if ($commentUser) {
+                    unset($commentUser['password']);
+                    $comment['user'] = $commentUser;
+                }
+            }
+            $post['comments'] = $comments;
+        };
+        
+        // Process posts
+        foreach ($posts as &$post) {
+            $post['user'] = $user;
+            $addSocialData($post);
+        }
                            
         // Get Follower / Following count
         $followModel = new FollowModel();
