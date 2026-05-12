@@ -373,6 +373,51 @@ body {
     }
 }
 
+/* Comment Section Styling */
+.comments-section {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--glass-border);
+}
+
+.comment-item {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    align-items: flex-start;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    transition: all 0.2s ease;
+}
+
+.comment-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.comment-item:last-child {
+    margin-bottom: 0;
+}
+
+.comments-list .comment-item {
+    margin-bottom: 12px;
+}
+
+.comments-list .comment-item:last-child {
+    margin-bottom: 0;
+}
+
+/* Comment Creation Form Styling */
+.comment-form-container {
+    margin-top: 16px;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+}
+
 /* Post Styling */
 .post-card {
     margin-bottom: 16px;

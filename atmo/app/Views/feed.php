@@ -183,15 +183,15 @@
                 
                 <!-- Comments Section -->
                 <?php if(!empty($postBody['comments'])): ?>
-                <div class="comments-section mt-3 pt-3" style="border-top: 1px solid var(--glass-border);">
+                <div class="comments-section">
                     <?php foreach($postBody['comments'] as $comment): ?>
-                    <div class="comment-item d-flex gap-3 mb-3">
-                        <img src="<?= base_url(esc($comment['user']['profile_pic'] ?? '')) ?>" class="rounded-circle profile-pic-img" width="32" height="32" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
-                        <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center profile-pic-placeholder" style="width: 32px; height: 32px; overflow: hidden; flex-shrink: 0; border: 1px solid var(--glass-border);">
+                    <div class="comment-item">
+                        <img src="<?= base_url(esc($comment['user']['profile_pic'] ?? '')) ?>" class="rounded-circle profile-pic-img flex-shrink-0" width="36" height="36" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
+                        <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center profile-pic-placeholder flex-shrink-0" style="width: 36px; height: 36px; overflow: hidden; border: 1px solid var(--glass-border);">
                             <i class="bi bi-person-fill text-white fs-5"></i>
                         </div>
                         <div class="flex-grow-1">
-                            <div class="d-flex align-items-baseline gap-2 mb-1">
+                            <div class="d-flex align-items-baseline gap-2 mb-1 flex-wrap">
                                 <a href="<?= site_url('profile/'.esc($comment['user']['username'] ?? 'unknown')) ?>" class="text-decoration-none">
                                     <span class="fw-bold" style="color: var(--text-primary); font-size: 0.9rem;"><?= esc(($comment['user']['first_name'] ?? 'Unknown').' '.($comment['user']['last_name'] ?? 'User')) ?></span>
                                 </a>
@@ -206,7 +206,7 @@
                                     ?>
                                 </span>
                             </div>
-                            <p class="mb-0" style="font-size: 0.95rem; line-height: 1.4; color: var(--text-primary);"><?= esc($comment['comment_text']) ?></p>
+                            <p class="mb-0" style="font-size: 0.95rem; line-height: 1.5; color: var(--text-primary); white-space: pre-wrap;"><?= esc($comment['comment_text']) ?></p>
                         </div>
                     </div>
                     <?php endforeach; ?>
@@ -255,13 +255,13 @@
                     <?php if(!empty($postBody['comments'])): ?>
                     <div class="comments-list mb-3" style="max-height: 300px; overflow-y: auto;">
                         <?php foreach($postBody['comments'] as $comment): ?>
-                        <div class="comment-item d-flex gap-3 mb-3 pb-3" style="border-bottom: 1px solid var(--glass-border);">
-                            <img src="<?= base_url(esc($comment['user']['profile_pic'] ?? '')) ?>" class="rounded-circle profile-pic-img" width="40" height="40" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
-                            <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center profile-pic-placeholder" style="width: 40px; height: 40px; overflow: hidden; flex-shrink: 0; border: 1px solid var(--glass-border);">
+                        <div class="comment-item">
+                            <img src="<?= base_url(esc($comment['user']['profile_pic'] ?? '')) ?>" class="rounded-circle profile-pic-img flex-shrink-0" width="40" height="40" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
+                            <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center profile-pic-placeholder flex-shrink-0" style="width: 40px; height: 40px; overflow: hidden; border: 1px solid var(--glass-border);">
                                 <i class="bi bi-person-fill text-white fs-5"></i>
                             </div>
                             <div class="flex-grow-1">
-                                <div class="d-flex align-items-baseline gap-2 mb-1">
+                                <div class="d-flex align-items-baseline gap-2 mb-1 flex-wrap">
                                     <a href="<?= site_url('profile/'.esc($comment['user']['username'] ?? 'unknown')) ?>" class="text-decoration-none">
                                         <span class="fw-bold" style="color: var(--text-primary);"><?= esc(($comment['user']['first_name'] ?? 'Unknown').' '.($comment['user']['last_name'] ?? 'User')) ?></span>
                                     </a>
@@ -276,7 +276,7 @@
                                         ?>
                                     </span>
                                 </div>
-                                <p class="mb-0" style="font-size: 1rem; line-height: 1.5; color: var(--text-primary);"><?= esc($comment['comment_text']) ?></p>
+                                <p class="mb-0" style="font-size: 1rem; line-height: 1.5; color: var(--text-primary); white-space: pre-wrap;"><?= esc($comment['comment_text']) ?></p>
                             </div>
                         </div>
                         <?php endforeach; ?>
@@ -287,18 +287,20 @@
                         <p>No comments yet. Be the first!</p>
                     </div>
                     <?php endif; ?>
-                    <form action="<?= site_url('posts/addComment/'.$postBody['id']) ?>" method="POST">
-                        <div class="d-flex gap-3 align-items-end">
-                            <img src="<?= base_url(esc(session()->get('profile_pic') ?? '')) ?>" class="rounded-circle profile-pic-img" width="40" height="40" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
-                            <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center profile-pic-placeholder" style="width: 40px; height: 40px; overflow: hidden; flex-shrink: 0; border: 1px solid var(--glass-border);">
-                                <i class="bi bi-person-fill text-white fs-5"></i>
+                    <div class="comment-form-container">
+                        <form action="<?= site_url('posts/addComment/'.$postBody['id']) ?>" method="POST">
+                            <div class="d-flex gap-3 align-items-start">
+                                <img src="<?= base_url(esc(session()->get('profile_pic') ?? '')) ?>" class="rounded-circle profile-pic-img flex-shrink-0" width="40" height="40" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
+                                <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center profile-pic-placeholder flex-shrink-0" style="width: 40px; height: 40px; overflow: hidden; border: 1px solid var(--glass-border);">
+                                    <i class="bi bi-person-fill text-white fs-5"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <textarea name="comment_text" class="glass-input" rows="2" placeholder="Write a comment..." style="width: 100%; resize: none;"></textarea>
+                                </div>
+                                <button type="submit" class="glass-btn">Comment</button>
                             </div>
-                            <div class="flex-grow-1">
-                                <textarea name="comment_text" class="glass-input" rows="2" placeholder="Write a comment..." style="width: 100%; resize: none;"></textarea>
-                            </div>
-                            <button type="submit" class="glass-btn">Comment</button>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
