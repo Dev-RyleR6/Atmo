@@ -77,7 +77,7 @@
     </div>
 <?php else: ?>
     <?php foreach($posts as $postBody): ?>
-        <div class="glass-panel mb-4" style="border-radius: var(--border-radius); padding: 16px 20px;">
+        <div class="glass-panel post-card" style="border-radius: var(--border-radius); padding: 16px 20px;">
             <div class="d-flex align-items-center mb-3">
                 <img src="<?= base_url(esc($user['profile_pic'] ?? 'default_user.png')) ?>" class="rounded-circle me-3" width="48" height="48" onerror="this.src='https://via.placeholder.com/48';">
                 <div class="flex-grow-1">
@@ -127,13 +127,17 @@
                 </div>
             </div>
 
-            <p class="mb-3" style="font-size: 1.05rem; line-height: 1.5; white-space: pre-wrap; color: var(--text-primary);"><?= esc($postBody['content']) ?></p>
+            <!-- Post Body Text -->
+            <?php if(!empty($postBody['content'])): ?>
+            <p class="mb-3 post-content" style="font-size: 1.05rem; line-height: 1.5; white-space: pre-wrap; color: var(--text-primary);"><?= esc($postBody['content']) ?></p>
+            <?php endif; ?>
 
+            <!-- Post Media -->
             <?php if(!empty($postBody['media_path'])): ?>
                 <?php if($postBody['media_type'] == 'image'): ?>
-                    <img src="<?= base_url(esc($postBody['media_path'])) ?>" class="media-attachment">
+                    <img src="<?= base_url(esc($postBody['media_path'])) ?>" class="media-attachment <?= !empty($postBody['content']) ? 'media-with-content' : 'media-only' ?>">
                 <?php elseif($postBody['media_type'] == 'video'): ?>
-                    <video controls class="media-attachment">
+                    <video controls class="media-attachment <?= !empty($postBody['content']) ? 'media-with-content' : 'media-only' ?>">
                         <source src="<?= base_url(esc($postBody['media_path'])) ?>">
                     </video>
                 <?php endif; ?>
