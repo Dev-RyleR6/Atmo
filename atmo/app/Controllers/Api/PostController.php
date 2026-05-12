@@ -4,6 +4,9 @@ namespace App\Controllers\Api;
 
 use App\Controllers\BaseController;
 use App\Models\PostModel;
+use App\Models\LikeModel;
+use App\Models\CommentModel;
+use App\Models\RepostModel;
 use CodeIgniter\API\ResponseTrait;
 
 class PostController extends BaseController
@@ -12,7 +15,7 @@ class PostController extends BaseController
 
     public function index()
     {
-        $userId = $this->request->user_id;
+        $userId = session()->get('user_id');
         $db = \Config\Database::connect();
         
         // Fetch posts from users I follow + my own posts
@@ -29,6 +32,19 @@ class PostController extends BaseController
         $followingIds[] = $userId; // Include self
 
         $postModel = new PostModel();
+        $likeModel = new LikeModel();
+        $commentModel = new CommentModel();
+        $repostModel = new RepostModel();
+        
+        // Helper function to add social data to a post
+        $addSocialData = function(&$post) use ($likeModel, $commentModel, $repostModel, $userId) {
+            $postId = $post['id'];
+            $post['like_count'] = $likeModel->where('post_id', $postId)->countAllResults();
+            $post['comment_count'] = $commentModel->where('post_id', $postId)->countAllResults();
+            $post['repost_count'] = $repostModel->where('post_id', $postId)->countAllResults();
+            $post['is_liked'] = $likeModel->where('user_id', $userId)->where('post_id', $postId)->first() ? true : false;
+            $post['is_reposted'] = $repostModel->where('user_id', $userId)->where('post_id', $postId)->first() ? true : false;
+        };
         
         // Fetch original posts
         $posts = $postModel->whereIn('user_id', $followingIds)
@@ -38,7 +54,6 @@ class PostController extends BaseController
                            ->findAll();
                            
         // Fetch Reposts and merge
-        $repostModel = new \App\Models\RepostModel();
         $reposts = $repostModel->whereIn('user_id', $followingIds)
                                ->orderBy('created_at', 'DESC')
                                ->limit(50)
@@ -54,6 +69,7 @@ class PostController extends BaseController
                 unset($user['password']);
                 $post['user'] = $user;
             }
+            $addSocialData($post);
         }
 
         // Process reposts
@@ -73,6 +89,7 @@ class PostController extends BaseController
                     unset($originalAuthor['password']);
                     $originalPost['user'] = $originalAuthor;
                 }
+                $addSocialData($originalPost);
                 $repost['original_post'] = $originalPost;
             }
         }
@@ -88,7 +105,7 @@ class PostController extends BaseController
 
     public function create()
     {
-        $userId = $this->request->user_id;
+        $userId = session()->get('user_id');
         
         $rules = [
             'content'    => 'permit_empty|string',
@@ -145,7 +162,7 @@ class PostController extends BaseController
 
     public function delete($id)
     {
-        $userId = $this->request->user_id;
+        $userId = session()->get('user_id');
         $postModel = new PostModel();
         
         $post = $postModel->find($id);

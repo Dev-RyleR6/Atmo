@@ -5,6 +5,8 @@ namespace App\Controllers;
 use App\Models\PostModel;
 use App\Models\RepostModel;
 use App\Models\UserModel;
+use App\Models\LikeModel;
+use App\Models\CommentModel;
 
 class PostController extends BaseController
 {
@@ -23,6 +25,9 @@ class PostController extends BaseController
         $followingIds[] = $userId; // Include self
 
         $postModel = new PostModel();
+        $likeModel = new LikeModel();
+        $commentModel = new CommentModel();
+        $repostModel = new RepostModel();
         
         // Fetch original posts
         $posts = $postModel->whereIn('user_id', $followingIds)
@@ -32,13 +37,22 @@ class PostController extends BaseController
                            ->findAll();
                            
         // Fetch Reposts and merge
-        $repostModel = new RepostModel();
         $reposts = $repostModel->whereIn('user_id', $followingIds)
                                ->orderBy('created_at', 'DESC')
                                ->limit(50)
                                ->findAll();
 
         $userModel = new UserModel();
+        
+        // Helper function to add social data to a post
+        $addSocialData = function(&$post) use ($likeModel, $commentModel, $repostModel, $userId) {
+            $postId = $post['id'];
+            $post['like_count'] = $likeModel->where('post_id', $postId)->countAllResults();
+            $post['comment_count'] = $commentModel->where('post_id', $postId)->countAllResults();
+            $post['repost_count'] = $repostModel->where('post_id', $postId)->countAllResults();
+            $post['is_liked'] = $likeModel->where('user_id', $userId)->where('post_id', $postId)->first() ? true : false;
+            $post['is_reposted'] = $repostModel->where('user_id', $userId)->where('post_id', $postId)->first() ? true : false;
+        };
         
         // Process original posts
         $validPosts = [];
@@ -54,6 +68,7 @@ class PostController extends BaseController
             }
             unset($user['password']);
             $post['user'] = $user;
+            $addSocialData($post);
             $validPosts[] = $post;
         }
         $posts = $validPosts;
@@ -83,6 +98,7 @@ class PostController extends BaseController
             }
             unset($originalAuthor['password']);
             $originalPost['user'] = $originalAuthor;
+            $addSocialData($originalPost);
             $repost['original_post'] = $originalPost;
             $validReposts[] = $repost;
         }
@@ -97,6 +113,55 @@ class PostController extends BaseController
         $feed = array_slice($feed, 0, 50);
 
         return view('feed', ['posts' => $feed]);
+    }
+    
+    public function toggleLike($postId)
+    {
+        $userId = session()->get('user_id');
+        $likeModel = new LikeModel();
+        
+        $existing = $likeModel->where('user_id', $userId)->where('post_id', $postId)->first();
+
+        if ($existing) {
+            $likeModel->where('user_id', $userId)->where('post_id', $postId)->delete();
+        } else {
+            $likeModel->insert(['user_id' => $userId, 'post_id' => $postId]);
+        }
+        
+        return redirect()->back();
+    }
+    
+    public function addComment($postId)
+    {
+        $userId = session()->get('user_id');
+        $text = $this->request->getPost('comment_text');
+
+        if (!empty($text)) {
+            $commentModel = new CommentModel();
+            $commentModel->insert([
+                'post_id' => $postId,
+                'user_id' => $userId,
+                'comment_text' => $text
+            ]);
+        }
+        
+        return redirect()->back();
+    }
+    
+    public function toggleRepost($postId)
+    {
+        $userId = session()->get('user_id');
+        $repostModel = new RepostModel();
+        
+        $existing = $repostModel->where('user_id', $userId)->where('post_id', $postId)->first();
+
+        if ($existing) {
+            $repostModel->where('user_id', $userId)->where('post_id', $postId)->delete();
+        } else {
+            $repostModel->insert(['user_id' => $userId, 'post_id' => $postId]);
+        }
+        
+        return redirect()->back();
     }
 
     public function create()

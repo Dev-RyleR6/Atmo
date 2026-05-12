@@ -173,23 +173,46 @@
 
                 <!-- Interaction Bar -->
                 <div class="interaction-bar d-flex gap-3 align-items-center mt-3">
-                    <button class="action-btn comment-btn">
-                        <i class="bi bi-chat"></i>
-                        <span>24</span>
-                    </button>
-                    <form action="<?= site_url('posts/toggleRepost/'.$postBody['id']) ?>" method="POST" class="m-0">
-                        <button type="submit" class="action-btn repost-btn">
-                            <i class="bi bi-arrow-repeat"></i>
-                            <span>12</span>
+                    <form action="<?= site_url('posts/toggleLike/'.$postBody['id']) ?>" method="POST" class="m-0">
+                        <button type="submit" class="action-btn like-btn <?= $postBody['is_liked'] ? 'text-danger' : '' ?>">
+                            <i class="bi <?= $postBody['is_liked'] ? 'bi-heart-fill' : 'bi-heart' ?>"></i>
+                            <span><?= $postBody['like_count'] ?></span>
                         </button>
                     </form>
-                    <button class="action-btn like-btn">
-                        <i class="bi bi-heart"></i>
-                        <span>128</span>
+                    <button class="action-btn comment-btn" data-bs-toggle="modal" data-bs-target="#commentModal<?= $postBody['id'] ?>">
+                        <i class="bi bi-chat"></i>
+                        <span><?= $postBody['comment_count'] ?></span>
                     </button>
+                    <form action="<?= site_url('posts/toggleRepost/'.$postBody['id']) ?>" method="POST" class="m-0">
+                        <button type="submit" class="action-btn repost-btn <?= $postBody['is_reposted'] ? 'text-success' : '' ?>">
+                            <i class="bi bi-arrow-repeat"></i>
+                            <span><?= $postBody['repost_count'] ?></span>
+                        </button>
+                    </form>
                     <button class="action-btn">
                         <i class="bi bi-share"></i>
                     </button>
+                </div>
+                
+                <!-- Comment Modal -->
+                <div class="modal fade" id="commentModal<?= $postBody['id'] ?>" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content glass-panel" style="background: var(--bg-color);">
+                            <div class="modal-header border-0 pb-0">
+                                <h5 class="modal-title fw-bold">Add Comment</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form action="<?= site_url('posts/addComment/'.$postBody['id']) ?>" method="POST">
+                                <div class="modal-body">
+                                    <textarea name="comment_text" class="glass-input" rows="3" placeholder="Write your comment..." style="width: 100%; resize: none;"></textarea>
+                                </div>
+                                <div class="modal-footer border-0 pt-0">
+                                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="glass-btn">Comment</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
 

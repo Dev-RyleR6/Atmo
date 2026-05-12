@@ -20,6 +20,9 @@ $routes->group('', ['filter' => 'auth_web'], function($routes) {
     $routes->post('posts/create', 'PostController::create');
     $routes->post('posts/edit/(:num)', 'PostController::edit/$1');
     $routes->post('posts/delete/(:num)', 'PostController::delete/$1');
+    $routes->post('posts/toggleLike/(:num)', 'PostController::toggleLike/$1');
+    $routes->post('posts/addComment/(:num)', 'PostController::addComment/$1');
+    $routes->post('posts/toggleRepost/(:num)', 'PostController::toggleRepost/$1');
     
     // Profile
     $routes->get('profile', 'UserController::profile');
