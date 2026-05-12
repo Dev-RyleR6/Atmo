@@ -418,6 +418,67 @@ body {
     border: 1px solid var(--glass-border);
 }
 
+/* Search Widget Styling */
+.search-widget {
+    position: relative;
+}
+
+.search-input-container {
+    z-index: 10;
+}
+
+.search-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 8px;
+    border-radius: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 100;
+    padding: 8px;
+}
+
+.search-result-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.search-result-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.search-result-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    object-fit: cover;
+}
+
+.search-result-info {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.search-result-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.search-result-username {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
 /* Post Styling */
 .post-card {
     margin-bottom: 16px;

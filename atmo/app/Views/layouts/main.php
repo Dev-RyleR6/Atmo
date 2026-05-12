@@ -98,13 +98,15 @@
             <!-- Right Sidebar (Backend Data Focus) -->
             <aside class="sidebar-right">
                 <!-- Search Widget -->
-                <div class="glass-panel"
-                    style="padding: 10px 16px; border-radius: 999px; display: flex; align-items: center; gap: 8px;">
-                    <i class="bi bi-search text-muted"></i>
-                    <form action="<?= site_url('users/search') ?>" method="GET" style="width: 100%;">
-                        <input type="search" name="q" class="glass-input" placeholder="Search Atmo"
-                            value="<?= esc(request()->getGet('q') ?? '') ?>">
-                    </form>
+                <div class="search-widget" style="position: relative;">
+                    <div class="glass-panel search-input-container"
+                        style="padding: 10px 16px; border-radius: 999px; display: flex; align-items: center; gap: 8px;">
+                        <i class="bi bi-search text-muted"></i>
+                        <input type="search" id="searchInput" class="glass-input" placeholder="Search Atmo"
+                            value="<?= esc(request()->getGet('q') ?? '') ?>" autocomplete="off">
+                    </div>
+                    <!-- Search Results Dropdown -->
+                    <div id="searchDropdown" class="search-dropdown glass-panel" style="display: none;"></div>
                 </div>
 
                 <div class="mt-4 px-3 text-muted" style="font-size: 0.85rem;">

@@ -32,3 +32,9 @@ $routes->group('', ['filter' => 'auth_web'], function($routes) {
     $routes->post('users/toggleFollow/(:num)', 'NetworkController::toggleFollow/$1');
     $routes->get('users/search', 'UserController::search');
 });
+
+// API Routes
+$routes->group('api', function($routes) {
+    $routes->get('users/search', 'Api\UserController::search');
+    $routes->get('users/(:segment)', 'Api\UserController::show/$1');
+});
