@@ -76,9 +76,38 @@ document.addEventListener('DOMContentLoaded', function() {
             const file = this.files[0];
             if (file) {
                 const reader = new FileReader();
+                const mediaFileName = document.getElementById('mediaFileName');
+                const mediaFileIcon = document.getElementById('mediaFileIcon');
+                const mediaPreviewImage = document.getElementById('mediaPreviewImage');
+                const mediaPreviewVideo = document.getElementById('mediaPreviewVideo');
+                
+                // Set filename
+                mediaFileName.textContent = file.name;
+                
+                // Set icon based on file type
+                if (file.type.startsWith('image/')) {
+                    mediaFileIcon.className = 'bi bi-file-earmark-image';
+                } else if (file.type.startsWith('video/')) {
+                    mediaFileIcon.className = 'bi bi-file-earmark-play';
+                } else {
+                    mediaFileIcon.className = 'bi bi-file-earmark';
+                }
+                
                 reader.onload = function(e) {
-                    previewImg.src = e.target.result;
+                    // Hide both previews first
+                    mediaPreviewImage.style.display = 'none';
+                    mediaPreviewVideo.style.display = 'none';
+                    
+                    if (file.type.startsWith('image/')) {
+                        mediaPreviewImage.src = e.target.result;
+                        mediaPreviewImage.style.display = 'block';
+                    } else if (file.type.startsWith('video/')) {
+                        mediaPreviewVideo.src = e.target.result;
+                        mediaPreviewVideo.style.display = 'block';
+                    }
+                    
                     previewContainer.classList.add('active');
+                    previewContainer.style.display = 'block';
                 }
                 reader.readAsDataURL(file);
             }
@@ -87,9 +116,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (removeMediaBtn) {
         removeMediaBtn.addEventListener('click', function() {
+            const mediaPreviewImage = document.getElementById('mediaPreviewImage');
+            const mediaPreviewVideo = document.getElementById('mediaPreviewVideo');
+            
             mediaInput.value = '';
             previewContainer.classList.remove('active');
-            previewImg.src = '';
+            previewContainer.style.display = 'none';
+            mediaPreviewImage.src = '';
+            mediaPreviewImage.style.display = 'none';
+            mediaPreviewVideo.src = '';
+            mediaPreviewVideo.style.display = 'none';
         });
     }
 

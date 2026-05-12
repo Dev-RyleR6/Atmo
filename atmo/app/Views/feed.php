@@ -18,7 +18,12 @@
         <!-- Media Preview Area (JS Managed) -->
         <div class="media-preview-container mb-2" style="display: none;">
             <button type="button" class="remove-media-btn"><i class="bi bi-x-lg"></i></button>
-            <img src="" class="media-preview">
+            <div class="media-file-info mb-2 d-flex align-items-center gap-2">
+                <i class="bi bi-file-earmark" id="mediaFileIcon"></i>
+                <span id="mediaFileName" class="text-muted small"></span>
+            </div>
+            <img src="" class="media-preview" id="mediaPreviewImage" style="display: none;">
+            <video controls class="media-preview" id="mediaPreviewVideo" style="display: none;"></video>
         </div>
 
         <div class="composer-toolbar d-flex justify-content-between align-items-center mt-2">
