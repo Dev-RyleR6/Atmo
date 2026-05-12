@@ -184,7 +184,22 @@
                 <!-- Comments Section -->
                 <?php if(!empty($postBody['comments'])): ?>
                 <div class="comments-section">
-                    <?php foreach($postBody['comments'] as $comment): ?>
+                    <?php 
+                    $commentsToShow = [];
+                    if (count($postBody['comments']) >= 2) {
+                        $firstUserId = $postBody['comments'][0]['user_id'];
+                        $secondUserId = $postBody['comments'][1]['user_id'];
+                        
+                        if ($firstUserId === $secondUserId) {
+                            $commentsToShow = array_slice($postBody['comments'], 0, 1);
+                        } else {
+                            $commentsToShow = array_slice($postBody['comments'], 0, 2);
+                        }
+                    } else {
+                        $commentsToShow = $postBody['comments'];
+                    }
+                    
+                    foreach($commentsToShow as $comment): ?>
                     <div class="comment-item">
                         <img src="<?= base_url(esc($comment['user']['profile_pic'] ?? '')) ?>" class="rounded-circle profile-pic-img flex-shrink-0" width="36" height="36" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
                         <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center profile-pic-placeholder flex-shrink-0" style="width: 36px; height: 36px; overflow: hidden; border: 1px solid var(--glass-border);">
@@ -210,6 +225,24 @@
                         </div>
                     </div>
                     <?php endforeach; ?>
+                    <?php 
+                    $showViewAll = false;
+                    if (count($postBody['comments']) > 1) {
+                        $firstUserId = $postBody['comments'][0]['user_id'];
+                        $secondUserId = $postBody['comments'][1]['user_id'] ?? null;
+                        
+                        if ($firstUserId === $secondUserId) {
+                            $showViewAll = count($postBody['comments']) > 1;
+                        } else {
+                            $showViewAll = count($postBody['comments']) > 2;
+                        }
+                    }
+                    
+                    if ($showViewAll): ?>
+                    <button class="action-btn comment-btn mt-2" data-bs-toggle="modal" data-bs-target="#commentModal<?= $postBody['id'] ?>">
+                        View all <?= $postBody['comment_count'] ?> comments
+                    </button>
+                    <?php endif; ?>
                 </div>
                 <?php endif; ?>
             </div>
