@@ -58,28 +58,40 @@
         <?php foreach($posts as $post): ?>
             <!-- Repost Context -->
             <?php if($post['type'] == 'repost'): ?>
+                <?php 
+                    // Skip if original post or user data is missing
+                    if (empty($post['original_post']) || empty($post['original_post']['user'])) {
+                        continue;
+                    }
+                ?>
                 <div class="text-muted small mb-2 d-flex align-items-center gap-2 fw-semibold" style="padding: 0 10px; margin-left: 56px;">
                     <i class="bi bi-arrow-repeat fs-6"></i> <?= esc($post['reposted_by']['username'] ?? 'Someone') ?> reposted
                 </div>
                 <?php $postBody = $post['original_post']; ?>
             <?php else: ?>
+                <?php 
+                    // Skip if user data is missing
+                    if (empty($post['user'])) {
+                        continue;
+                    }
+                ?>
                 <?php $postBody = $post; ?>
             <?php endif; ?>
 
-            <div class="glass-panel mb-4" style="border-radius: var(--border-radius); padding: 16px 20px;">
+            <div class="glass-panel post-card" style="border-radius: var(--border-radius); padding: 16px 20px;">
                 <!-- Post Header -->
                 <div class="d-flex align-items-center mb-3">
                     <img src="<?= base_url(esc($postBody['user']['profile_pic'] ?? 'default_user.png')) ?>" class="rounded-circle me-3" width="48" height="48" onerror="this.src='https://via.placeholder.com/48';">
                     <div class="flex-grow-1">
                         <div class="d-flex align-items-baseline gap-2">
-                            <a href="<?= site_url('profile/'.esc($postBody['user']['username'])) ?>" class="text-decoration-none">
-                                <h6 class="mb-0 fw-bold fs-6" style="color: var(--text-primary);"><?= esc($postBody['user']['first_name'].' '.$postBody['user']['last_name']) ?> 
+                            <a href="<?= site_url('profile/'.esc($postBody['user']['username'] ?? 'unknown')) ?>" class="text-decoration-none">
+                                <h6 class="mb-0 fw-bold fs-6" style="color: var(--text-primary);"><?= esc(($postBody['user']['first_name'] ?? 'Unknown').' '.($postBody['user']['last_name'] ?? 'User')) ?> 
                                     <?php if(!empty($postBody['user']['is_verified'])): ?>
                                         <i class="bi bi-patch-check-fill text-primary small"></i>
                                     <?php endif; ?>
                                 </h6>
                             </a>
-                            <span class="text-muted small">@<?= esc($postBody['user']['username']) ?> • 
+                            <span class="text-muted small">@<?= esc($postBody['user']['username'] ?? 'unknown') ?> • 
                                 <span title="<?= date('M j, Y g:i A', strtotime($postBody['created_at'])) ?>">
                                     <?php
                                         $diff = time() - strtotime($postBody['created_at']);
@@ -144,14 +156,16 @@
                 <?php endif; ?>
 
                 <!-- Post Body Text -->
-                <p class="mb-3" style="font-size: 1.05rem; line-height: 1.5; white-space: pre-wrap; color: var(--text-primary);"><?= esc($postBody['content']) ?></p>
+                <?php if(!empty($postBody['content'])): ?>
+                <p class="mb-3 post-content" style="font-size: 1.05rem; line-height: 1.5; white-space: pre-wrap; color: var(--text-primary);"><?= esc($postBody['content']) ?></p>
+                <?php endif; ?>
 
                 <!-- Post Media -->
                 <?php if(!empty($postBody['media_path'])): ?>
                     <?php if($postBody['media_type'] == 'image'): ?>
-                        <img src="<?= base_url(esc($postBody['media_path'])) ?>" class="media-attachment">
+                        <img src="<?= base_url(esc($postBody['media_path'])) ?>" class="media-attachment <?= !empty($postBody['content']) ? 'media-with-content' : 'media-only' ?>">
                     <?php elseif($postBody['media_type'] == 'video'): ?>
-                        <video controls class="media-attachment">
+                        <video controls class="media-attachment <?= !empty($postBody['content']) ? 'media-with-content' : 'media-only' ?>">
                             <source src="<?= base_url(esc($postBody['media_path'])) ?>">
                         </video>
                     <?php endif; ?>

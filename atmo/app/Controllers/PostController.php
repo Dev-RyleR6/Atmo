@@ -41,34 +41,52 @@ class PostController extends BaseController
         $userModel = new UserModel();
         
         // Process original posts
+        $validPosts = [];
         foreach ($posts as &$post) {
             $post['type'] = 'original';
-            $user = $userModel->find($post['user_id']);
-            if ($user) {
-                unset($user['password']);
-                $post['user'] = $user;
+            // Skip posts without content and media
+            if (empty($post['content']) && empty($post['media_path'])) {
+                continue;
             }
+            $user = $userModel->find($post['user_id']);
+            if (!$user) {
+                continue; // Skip if user not found
+            }
+            unset($user['password']);
+            $post['user'] = $user;
+            $validPosts[] = $post;
         }
+        $posts = $validPosts;
 
         // Process reposts
+        $validReposts = [];
         foreach ($reposts as &$repost) {
             $repost['type'] = 'repost';
             $author = $userModel->find($repost['user_id']);
-            if ($author) {
-                unset($author['password']);
-                $repost['reposted_by'] = $author;
+            if (!$author) {
+                continue; // Skip if repost author not found
             }
+            unset($author['password']);
+            $repost['reposted_by'] = $author;
             
             $originalPost = $postModel->find($repost['post_id']);
-            if ($originalPost) {
-                $originalAuthor = $userModel->find($originalPost['user_id']);
-                if ($originalAuthor) {
-                    unset($originalAuthor['password']);
-                    $originalPost['user'] = $originalAuthor;
-                }
-                $repost['original_post'] = $originalPost;
+            if (!$originalPost) {
+                continue; // Skip if original post not found
             }
+            // Skip reposts without content and media
+            if (empty($originalPost['content']) && empty($originalPost['media_path'])) {
+                continue;
+            }
+            $originalAuthor = $userModel->find($originalPost['user_id']);
+            if (!$originalAuthor) {
+                continue; // Skip if original post author not found
+            }
+            unset($originalAuthor['password']);
+            $originalPost['user'] = $originalAuthor;
+            $repost['original_post'] = $originalPost;
+            $validReposts[] = $repost;
         }
+        $reposts = $validReposts;
 
         // Merge and sort
         $feed = array_merge($posts, $reposts);

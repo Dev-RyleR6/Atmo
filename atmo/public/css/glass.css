@@ -226,6 +226,13 @@ body {
     margin-top: 16px;
     padding: 8px 0;
 }
+
+.interaction-bar form {
+    margin: 0;
+    padding: 0;
+    display: contents; /* Forms no longer create layout containers */
+}
+
 @media (max-width: 576px) {
     .interaction-bar {
         justify-content: space-between;
@@ -308,10 +315,18 @@ body {
     width: 100%;
     max-height: 520px;
     object-fit: cover;
-    margin-top: 12px;
     border: 1px solid var(--glass-border);
     cursor: pointer;
     transition: opacity 0.2s;
+    display: block;
+}
+
+.media-with-content {
+    margin-top: 0;
+}
+
+.media-only {
+    margin-top: 12px;
 }
 
 .media-attachment:hover {
@@ -335,6 +350,10 @@ body {
     color: var(--text-secondary);
 }
 
+.post-content {
+    margin-bottom: 12px !important;
+}
+
 /* Animations */
 @keyframes fadeInUp {
     from {
@@ -349,7 +368,7 @@ body {
 
 /* Post Styling */
 .post-card {
-    margin-bottom: 24px;
+    margin-bottom: 16px;
 }
 
 /* Responsive Hide */
