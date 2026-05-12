@@ -3,76 +3,108 @@
 <?= $this->section('content') ?>
 
 <!-- Profile Header -->
-<div class="glass-panel text-center position-relative mb-4">
-    <div style="height: 120px; background: rgba(255,255,255,0.05); border-radius: 8px 8px 0 0; margin: -20px -20px 0 -20px;"></div>
+<div class="glass-panel text-center position-relative mb-4" style="overflow: hidden;">
+    <!-- Cover Image -->
+    <div style="height: 140px; background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(59, 130, 246, 0.15) 100%); border-radius: 8px 8px 0 0; margin: -20px -20px 0 -20px;"></div>
     
-    <img src="<?= base_url(esc($user['profile_pic'] ?? '')) ?>" class="rounded-circle profile-pic-img" width="120" height="120" style="object-fit:cover; margin-top: -60px; background: var(--bg-color);" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
-    <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center mx-auto" style="width: 120px; height: 120px; margin-top: -60px; background: var(--bg-color); border: 2px solid var(--glass-border);">
-        <i class="bi bi-person-fill text-white fs-1"></i>
+    <!-- Profile Picture -->
+    <div style="position: relative; margin-top: -70px; display: flex; justify-content: center;">
+        <img src="<?= base_url(esc($user['profile_pic'] ?? '')) ?>" class="rounded-circle profile-pic-img mx-auto" width="140" height="140" style="object-fit: cover; background: var(--bg-color); border: 4px solid var(--bg-color);" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
+        <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center mx-auto" style="width: 140px; height: 140px; background: var(--bg-color); border: 4px solid var(--bg-color); overflow: hidden;">
+            <i class="bi bi-person-fill text-white" style="font-size: 4rem;"></i>
+        </div>
     </div>
     
-    <h3 class="fw-bold mt-2 mb-0"><?= esc($user['first_name'].' '.$user['last_name']) ?></h3>
-    <p class="text-muted mb-2">@<?= esc($user['username']) ?></p>
-    
-    <?php if(!empty($user['bio'])): ?>
-    <p class="mb-3 fst-italic mx-auto" style="max-width: 80%;">"<?= esc($user['bio']) ?>"</p>
-    <?php endif; ?>
-    
-    <!-- Stats -->
-    <div class="d-flex justify-content-center gap-4 mb-4">
-        <div>
-            <h5 class="mb-0 fw-bold"><?= esc($followers_count) ?></h5>
-            <small class="text-muted">Followers</small>
+    <!-- User Info -->
+    <div class="mt-3">
+        <h2 class="fw-bold mb-1" style="font-size: 1.75rem;"><?= esc($user['first_name'].' '.$user['last_name']) ?></h2>
+        <p class="text-muted mb-3" style="font-size: 1rem;">@<?= esc($user['username']) ?></p>
+        
+        <?php if(!empty($user['bio'])): ?>
+        <p class="mb-4 mx-auto" style="max-width: 90%; line-height: 1.6; color: var(--text-primary);"><?= esc($user['bio']) ?></p>
+        <?php endif; ?>
+        
+        <!-- Stats -->
+        <div class="d-flex justify-content-center align-items-center mb-4" style="gap: 32px;">
+            <div class="text-center cursor-pointer profile-stat-item" id="followersTab" style="min-width: 80px; display: flex; flex-direction: column; align-items: center; padding: 8px 0;">
+                <div class="profile-stat-number" style="font-size: 1.6rem; font-weight: 700; color: var(--text-primary); line-height: 1; margin-bottom: 4px;"><?= esc($followers_count) ?></div>
+                <div class="profile-stat-label" style="font-size: 0.875rem; color: var(--text-secondary); line-height: 1;">Followers</div>
+            </div>
+            <div class="text-center cursor-pointer profile-stat-item" id="followingTab" style="min-width: 80px; display: flex; flex-direction: column; align-items: center; padding: 8px 0;">
+                <div class="profile-stat-number" style="font-size: 1.6rem; font-weight: 700; color: var(--text-primary); line-height: 1; margin-bottom: 4px;"><?= esc($following_count) ?></div>
+                <div class="profile-stat-label" style="font-size: 0.875rem; color: var(--text-secondary); line-height: 1;">Following</div>
+            </div>
+            <div class="text-center profile-stat-item" style="min-width: 80px; display: flex; flex-direction: column; align-items: center; padding: 8px 0;">
+                <div class="profile-stat-number" style="font-size: 1.6rem; font-weight: 700; color: var(--text-primary); line-height: 1; margin-bottom: 4px;"><?= count($posts) ?></div>
+                <div class="profile-stat-label" style="font-size: 0.875rem; color: var(--text-secondary); line-height: 1;">Posts</div>
+            </div>
         </div>
-        <div>
-            <h5 class="mb-0 fw-bold"><?= esc($following_count) ?></h5>
-            <small class="text-muted">Following</small>
-        </div>
-        <div>
-            <h5 class="mb-0 fw-bold"><?= count($posts) ?></h5>
-            <small class="text-muted">Posts</small>
+    </div>
+    
+    <!-- Followers/Following Modal -->
+    <div class="modal fade" id="followModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="false">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content glass-panel" style="background: var(--bg-color);">
+                <div class="modal-header border-0 pb-0">
+                    <div class="d-flex gap-3 w-100">
+                        <button class="nav-link fw-bold" id="modalFollowersTab" data-type="followers" style="color: var(--text-primary); border-bottom: 2px solid var(--accent-color);">Followers</button>
+                        <button class="nav-link fw-bold" id="modalFollowingTab" data-type="following" style="color: var(--text-secondary);">Following</button>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="followModalBody">
+                    <!-- Content will be loaded dynamically -->
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Edit Profile / Follow Button -->
     <?php if($is_own_profile): ?>
         <button class="glass-btn w-100 mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#editProfileForm">
-            Edit Profile
+            <i class="bi bi-pencil-square me-2"></i> Edit Profile
         </button>
         
-        <div class="collapse text-start mt-3" id="editProfileForm">
-            <form action="<?= site_url('profile/update') ?>" method="POST" enctype="multipart/form-data">
-                <div class="row">
-                    <div class="col-6 mb-3">
-                        <label class="form-label small text-muted">First Name</label>
-                        <input type="text" name="first_name" class="glass-input border-bottom border-secondary pb-1" value="<?= esc(old('first_name') ?? $user['first_name']) ?>">
+        <div class="collapse text-start mt-4" id="editProfileForm">
+            <div class="glass-panel" style="padding: 20px;">
+                <form action="<?= site_url('profile/update') ?>" method="POST" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-12 col-md-6 mb-4">
+                            <label class="form-label small text-muted fw-semibold">First Name</label>
+                            <input type="text" name="first_name" class="glass-input" value="<?= esc(old('first_name') ?? $user['first_name']) ?>">
+                        </div>
+                        <div class="col-12 col-md-6 mb-4">
+                            <label class="form-label small text-muted fw-semibold">Last Name</label>
+                            <input type="text" name="last_name" class="glass-input" value="<?= esc(old('last_name') ?? $user['last_name']) ?>">
+                        </div>
                     </div>
-                    <div class="col-6 mb-3">
-                        <label class="form-label small text-muted">Last Name</label>
-                        <input type="text" name="last_name" class="glass-input border-bottom border-secondary pb-1" value="<?= esc(old('last_name') ?? $user['last_name']) ?>">
+                    <div class="mb-4">
+                        <label class="form-label small text-muted fw-semibold">Email</label>
+                        <input type="email" name="email" class="glass-input" value="<?= esc(old('email') ?? $user['email']) ?>">
                     </div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label small text-muted">Email</label>
-                    <input type="email" name="email" class="glass-input border-bottom border-secondary pb-1" value="<?= esc(old('email') ?? $user['email']) ?>">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label small text-muted">Bio</label>
-                    <textarea name="bio" class="glass-input border-bottom border-secondary pb-1" rows="2"><?= esc(old('bio') ?? $user['bio']) ?></textarea>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label small text-muted d-block">Profile Picture</label>
-                    <input type="file" name="profile_pic" class="glass-input" accept="image/*" style="font-size: 0.9rem;">
-                </div>
-                <div class="text-end mt-3">
-                    <button type="submit" class="glass-btn">Save Changes</button>
-                </div>
-            </form>
+                    <div class="mb-4">
+                        <label class="form-label small text-muted fw-semibold">Bio</label>
+                        <textarea name="bio" class="glass-input" rows="3" placeholder="Tell us about yourself..."><?= esc(old('bio') ?? $user['bio']) ?></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small text-muted fw-semibold d-block">Profile Picture</label>
+                        <input type="file" name="profile_pic" class="glass-input" accept="image/*" style="font-size: 0.9rem;">
+                    </div>
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-toggle="collapse" data-bs-target="#editProfileForm">Cancel</button>
+                        <button type="submit" class="glass-btn">Save Changes</button>
+                    </div>
+                </form>
+            </div>
         </div>
     <?php else: ?>
         <form action="<?= site_url('users/toggleFollow/'.$user['id']) ?>" method="POST">
-            <button type="submit" class="glass-btn w-100 mb-2" style="<?= $is_following ? 'background: transparent; border: 1px solid var(--glass-border); color: var(--text-primary);' : '' ?>">
-                <?= $is_following ? 'Following' : 'Follow' ?>
+            <button type="submit" class="glass-btn w-100 mb-2" style="<?= $is_following ? 'background: transparent; border: 1px solid var(--accent-color); color: var(--accent-color);' : '' ?>">
+                <?php if($is_following): ?>
+                    <i class="bi bi-person-check-fill me-2"></i> Following
+                <?php else: ?>
+                    <i class="bi bi-person-plus-fill me-2"></i> Follow
+                <?php endif; ?>
             </button>
         </form>
     <?php endif; ?>
@@ -336,5 +368,138 @@
         </div>
     <?php endforeach; ?>
 <?php endif; ?>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const username = '<?= esc($user['username']) ?>';
+    const followersTab = document.getElementById('followersTab');
+    const followingTab = document.getElementById('followingTab');
+    const followModalElement = document.getElementById('followModal');
+    const followModal = new bootstrap.Modal(followModalElement, {
+        backdrop: false,
+        keyboard: true
+    });
+    const modalFollowersTab = document.getElementById('modalFollowersTab');
+    const modalFollowingTab = document.getElementById('modalFollowingTab');
+    const followModalBody = document.getElementById('followModalBody');
+    const modalCloseBtn = followModalElement.querySelector('.btn-close');
+    
+    let currentType = 'followers';
+    
+    // Open modal with followers
+    followersTab.addEventListener('click', function() {
+        currentType = 'followers';
+        updateModalTabs();
+        loadFollowData('followers');
+        followModal.show();
+    });
+    
+    // Open modal with following
+    followingTab.addEventListener('click', function() {
+        currentType = 'following';
+        updateModalTabs();
+        loadFollowData('following');
+        followModal.show();
+    });
+    
+    // Close modal when clicking close button
+    if (modalCloseBtn) {
+        modalCloseBtn.addEventListener('click', function() {
+            followModal.hide();
+        });
+    }
+    
+    // Close modal when clicking outside the modal content
+    followModalElement.addEventListener('click', function(e) {
+        if (e.target === followModalElement) {
+            followModal.hide();
+        }
+    });
+    
+    // Switch between tabs in modal
+    modalFollowersTab.addEventListener('click', function() {
+        currentType = 'followers';
+        updateModalTabs();
+        loadFollowData('followers');
+    });
+    
+    modalFollowingTab.addEventListener('click', function() {
+        currentType = 'following';
+        updateModalTabs();
+        loadFollowData('following');
+    });
+    
+    function updateModalTabs() {
+        if (currentType === 'followers') {
+            modalFollowersTab.style.color = 'var(--text-primary)';
+            modalFollowersTab.style.borderBottom = '2px solid var(--accent-color)';
+            modalFollowingTab.style.color = 'var(--text-secondary)';
+            modalFollowingTab.style.borderBottom = 'none';
+        } else {
+            modalFollowingTab.style.color = 'var(--text-primary)';
+            modalFollowingTab.style.borderBottom = '2px solid var(--accent-color)';
+            modalFollowersTab.style.color = 'var(--text-secondary)';
+            modalFollowersTab.style.borderBottom = 'none';
+        }
+    }
+    
+    async function loadFollowData(type) {
+        followModalBody.innerHTML = '<div class="text-center py-5"><i class="bi bi-hourglass-split fs-1 text-muted"></i></div>';
+        
+        try {
+            const response = await fetch(`/api/users/${type}/${username}`);
+            if (!response.ok) throw new Error('Failed to load data');
+            
+            const users = await response.json();
+            
+            if (users.length === 0) {
+                followModalBody.innerHTML = `
+                    <div class="text-center text-muted py-5">
+                        <i class="bi ${type === 'followers' ? 'bi-people' : 'bi-person-check'} fs-1 mb-3 opacity-25"></i>
+                        <p>${type === 'followers' ? 'No followers yet.' : 'Not following anyone yet.'}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            followModalBody.innerHTML = `
+                <div class="d-flex flex-column gap-3">
+                    ${users.map(u => `
+                        <div class="glass-panel modal-user-item" style="padding: 16px 20px;">
+                            <div class="modal-user-info">
+                                <img src="${u.profile_pic ? '/'+u.profile_pic : ''}" class="rounded-circle profile-pic-img" width="56" height="56" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
+                                <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center profile-pic-placeholder" style="width: 56px; height: 56px; overflow: hidden; border: 2px solid var(--glass-border);">
+                                    <i class="bi bi-person-fill text-white fs-3"></i>
+                                </div>
+                                <div class="modal-user-text">
+                                    <a href="/profile/${u.username}" class="text-decoration-none">
+                                        <h6 class="mb-0 fw-bold" style="color: var(--text-primary);">${u.first_name} ${u.last_name}</h6>
+                                    </a>
+                                    <small class="text-muted">@${u.username}</small>
+                                    ${u.bio ? `<p class="modal-user-bio mb-0">${u.bio}</p>` : ''}
+                                </div>
+                            </div>
+                            ${u.id != <?= session()->get('user_id') ?> ? `
+                            <form action="/users/toggleFollow/${u.id}" method="POST" class="flex-shrink-0">
+                                <button type="submit" class="glass-btn btn-sm" style="${u.is_following ? 'background: transparent; border: 1px solid var(--glass-border); color: var(--text-primary);' : ''}">
+                                    ${u.is_following ? 'Following' : 'Follow'}
+                                </button>
+                            </form>
+                            ` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        } catch (error) {
+            followModalBody.innerHTML = `
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-exclamation-triangle fs-1 mb-3 text-danger"></i>
+                    <p>Failed to load data. Please try again.</p>
+                </div>
+            `;
+        }
+    }
+});
+</script>
 
 <?= $this->endSection() ?>

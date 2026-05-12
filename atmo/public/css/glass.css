@@ -443,7 +443,7 @@ body {
     border-radius: 12px;
     max-height: 400px;
     overflow-y: auto;
-    z-index: 100;
+    z-index: 1000;
     padding: 8px;
 }
 
@@ -486,6 +486,31 @@ body {
     font-size: 0.85rem;
 }
 
+/* Profile stats hover effect */
+.cursor-pointer {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 8px 16px;
+    border-radius: 8px;
+}
+
+.cursor-pointer:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Modal tabs */
+.nav-link {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px 0;
+    transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+    color: var(--text-primary);
+}
+
 /* Post Styling */
 .post-card {
     margin-bottom: 16px;
@@ -493,18 +518,106 @@ body {
 
 /* Modal z-index fix */
 .modal {
-    z-index: 99999 !important;
+    z-index: 2147483647 !important;
 }
 .modal-backdrop {
-    z-index: 99998 !important;
+    z-index: 2147483646 !important;
+    display: none !important;
 }
 .modal-content {
-    z-index: 100000 !important;
+    z-index: 2147483648 !important;
     pointer-events: auto !important;
 }
 .modal-dialog {
-    z-index: 100001 !important;
+    z-index: 2147483649 !important;
     pointer-events: auto !important;
+}
+
+/* Custom modal overlay */
+.modal.show::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+}
+
+/* Modal header layout */
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.modal-header .d-flex {
+    flex-grow: 1;
+}
+
+.modal-header .btn-close {
+    flex-shrink: 0;
+}
+
+/* User item in modal */
+.modal-user-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.modal-user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-grow: 1;
+}
+
+.modal-user-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-user-bio {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+/* Profile page specific styling */
+.profile-header-cover {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(59, 130, 246, 0.15) 100%);
+}
+
+.profile-stat-item {
+    transition: all 0.3s ease;
+}
+
+.profile-stat-item:hover {
+    transform: translateY(-2px);
+}
+
+.profile-stat-number {
+    font-weight: 700;
+    line-height: 1;
+}
+
+.profile-stat-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+/* Improved form styling */
+.edit-profile-form {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
 }
 
 /* Profile Pic Placeholder Classes */

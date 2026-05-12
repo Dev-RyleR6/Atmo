@@ -166,4 +166,11 @@ document.addEventListener('DOMContentLoaded', function() {
         card.style.transition = 'all 0.4s ease-out';
         observer.observe(card);
     });
+    
+    // Close search dropdown when any modal opens
+    document.addEventListener('show.bs.modal', function () {
+        if (searchDropdown) {
+            searchDropdown.style.display = 'none';
+        }
+    });
 });

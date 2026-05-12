@@ -5,6 +5,7 @@ namespace App\Controllers\Api;
 use App\Controllers\BaseController;
 use App\Models\UserModel;
 use App\Models\PostModel;
+use App\Models\FollowModel;
 use CodeIgniter\API\ResponseTrait;
 
 class UserController extends BaseController
@@ -53,6 +54,64 @@ class UserController extends BaseController
         }
 
         return $this->respond($users);
+    }
+    
+    public function followers($username)
+    {
+        $loggedInUserId = session()->get('user_id');
+        $userModel = new UserModel();
+        $followModel = new FollowModel();
+        
+        $user = $userModel->where('username', $username)->first();
+        
+        if (!$user) {
+            return $this->failNotFound('User not found');
+        }
+        
+        // Get followers
+        $followers = $followModel->where('followed_id', $user['id'])->findAll();
+        $followerIds = array_column($followers, 'follower_id');
+        
+        $followerUsers = [];
+        if (!empty($followerIds)) {
+            $followerUsers = $userModel->whereIn('id', $followerIds)->findAll();
+            foreach ($followerUsers as &$follower) {
+                unset($follower['password']);
+                // Check if logged in user follows this follower
+                $follower['is_following'] = $loggedInUserId && $followModel->where('follower_id', $loggedInUserId)->where('followed_id', $follower['id'])->first() ? true : false;
+            }
+        }
+        
+        return $this->respond($followerUsers);
+    }
+    
+    public function following($username)
+    {
+        $loggedInUserId = session()->get('user_id');
+        $userModel = new UserModel();
+        $followModel = new FollowModel();
+        
+        $user = $userModel->where('username', $username)->first();
+        
+        if (!$user) {
+            return $this->failNotFound('User not found');
+        }
+        
+        // Get following
+        $following = $followModel->where('follower_id', $user['id'])->findAll();
+        $followingIds = array_column($following, 'followed_id');
+        
+        $followingUsers = [];
+        if (!empty($followingIds)) {
+            $followingUsers = $userModel->whereIn('id', $followingIds)->findAll();
+            foreach ($followingUsers as &$followed) {
+                unset($followed['password']);
+                // Check if logged in user follows this user
+                $followed['is_following'] = $loggedInUserId && $followModel->where('follower_id', $loggedInUserId)->where('followed_id', $followed['id'])->first() ? true : false;
+            }
+        }
+        
+        return $this->respond($followingUsers);
     }
 
     public function updateProfile()

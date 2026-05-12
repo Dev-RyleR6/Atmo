@@ -29,6 +29,12 @@ $routes->group('', ['filter' => 'auth_web'], function($routes) {
     $routes->get('profile/(:segment)', 'UserController::profile/$1');
     $routes->post('profile/update', 'UserController::updateProfile');
     
+    // Followers/Following
+    $routes->get('followers', 'UserController::followers');
+    $routes->get('followers/(:segment)', 'UserController::followers/$1');
+    $routes->get('following', 'UserController::following');
+    $routes->get('following/(:segment)', 'UserController::following/$1');
+    
     // Social / Network
     $routes->post('users/toggleFollow/(:num)', 'NetworkController::toggleFollow/$1');
     $routes->get('users/search', 'UserController::search');
@@ -38,4 +44,6 @@ $routes->group('', ['filter' => 'auth_web'], function($routes) {
 $routes->group('api', function($routes) {
     $routes->get('users/search', 'Api\UserController::search');
     $routes->get('users/(:segment)', 'Api\UserController::show/$1');
+    $routes->get('users/followers/(:segment)', 'Api\UserController::followers/$1');
+    $routes->get('users/following/(:segment)', 'Api\UserController::following/$1');
 });
