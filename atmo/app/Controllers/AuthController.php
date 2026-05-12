@@ -40,6 +40,9 @@ class AuthController extends BaseController
 
         session()->set('user_id', $user['id']);
         session()->set('username', $user['username']);
+        session()->set('profile_pic', $user['profile_pic'] ?? '');
+        session()->set('first_name', $user['first_name'] ?? '');
+        session()->set('last_name', $user['last_name'] ?? '');
         
         return redirect()->to(site_url('feed'))->with('success', 'Logged in successfully!');
     }

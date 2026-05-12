@@ -48,7 +48,8 @@
 
                 <!-- Authenticated User Tag -->
                 <div style="margin-top: auto; padding: 20px; display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--glass-border);">
-                    <div class="rounded-circle bg-secondary d-flex justify-content-center align-items-center" style="width: 40px; height: 40px; overflow: hidden; border: 1px solid var(--glass-border);">
+                    <img src="<?= base_url(esc(session()->get('profile_pic') ?? '')) ?>" class="rounded-circle profile-pic-img" width="40" height="40" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
+                    <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center profile-pic-placeholder" style="width: 40px; height: 40px; overflow: hidden; border: 1px solid var(--glass-border);">
                         <i class="bi bi-person-circle fs-3 text-white"></i>
                     </div>
                     <div class="nav-label">

@@ -6,7 +6,8 @@
 <div class="glass-panel composer mb-4">
     <form action="<?= site_url('posts/create') ?>" method="POST" enctype="multipart/form-data">
     <div class="composer-top d-flex align-items-start gap-3 mb-3">
-            <div class="rounded-circle bg-secondary d-flex justify-content-center align-items-center shadow-sm" style="width: 48px; height: 48px; overflow: hidden; flex-shrink: 0; border: 2px solid var(--glass-border);">
+            <img src="<?= base_url(esc(session()->get('profile_pic') ?? '')) ?>" class="rounded-circle shadow-sm profile-pic-img" style="width: 48px; height: 48px; overflow: hidden; flex-shrink: 0; border: 2px solid var(--glass-border);" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
+            <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center shadow-sm profile-pic-placeholder" style="width: 48px; height: 48px; overflow: hidden; flex-shrink: 0; border: 2px solid var(--glass-border);">
                 <i class="bi bi-person-fill text-white fs-3"></i>
             </div>
             <div class="flex-grow-1">
@@ -55,6 +56,10 @@
             <p>No posts to show yet. <br>Start following users to fill your atmosphere!</p>
         </div>
     <?php else: ?>
+        <?php 
+            // Collect all post bodies for modals
+            $allPostBodies = [];
+        ?>
         <?php foreach($posts as $post): ?>
             <!-- Repost Context -->
             <?php if($post['type'] == 'repost'): ?>
@@ -78,10 +83,15 @@
                 <?php $postBody = $post; ?>
             <?php endif; ?>
 
+            <?php $allPostBodies[] = $postBody; ?>
+
             <div class="glass-panel post-card" style="border-radius: var(--border-radius); padding: 16px 20px;">
                 <!-- Post Header -->
                 <div class="d-flex align-items-center mb-3">
-                    <img src="<?= base_url(esc($postBody['user']['profile_pic'] ?? 'default_user.png')) ?>" class="rounded-circle me-3" width="48" height="48" onerror="this.src='https://via.placeholder.com/48';">
+                    <img src="<?= base_url(esc($postBody['user']['profile_pic'] ?? '')) ?>" class="rounded-circle me-3 profile-pic-img" width="48" height="48" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
+                    <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center me-3 profile-pic-placeholder" style="width: 48px; height: 48px; overflow: hidden; flex-shrink: 0; border: 2px solid var(--glass-border);">
+                        <i class="bi bi-person-fill text-white fs-3"></i>
+                    </div>
                     <div class="flex-grow-1">
                         <div class="d-flex align-items-baseline gap-2">
                             <a href="<?= site_url('profile/'.esc($postBody['user']['username'] ?? 'unknown')) ?>" class="text-decoration-none">
@@ -132,29 +142,6 @@
                     </div>
                 </div>
 
-                <!-- Edit Modal -->
-                <?php if ($postBody['user_id'] == session()->get('user_id')): ?>
-                <div class="modal fade" id="editModal<?= $postBody['id'] ?>" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content glass-panel" style="background: var(--bg-color);">
-                            <div class="modal-header border-0 pb-0">
-                                <h5 class="modal-title fw-bold">Edit Post</h5>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <form action="<?= site_url('posts/edit/'.$postBody['id']) ?>" method="POST">
-                                <div class="modal-body">
-                                    <textarea name="content" class="glass-input" rows="4" style="width: 100%; resize: none;"><?= esc($postBody['content']) ?></textarea>
-                                </div>
-                                <div class="modal-footer border-0 pt-0">
-                                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="submit" class="glass-btn">Save Changes</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                <?php endif; ?>
-
                 <!-- Post Body Text -->
                 <?php if(!empty($postBody['content'])): ?>
                 <p class="mb-3 post-content" style="font-size: 1.05rem; line-height: 1.5; white-space: pre-wrap; color: var(--text-primary);"><?= esc($postBody['content']) ?></p>
@@ -194,30 +181,128 @@
                     </button>
                 </div>
                 
-                <!-- Comment Modal -->
-                <div class="modal fade" id="commentModal<?= $postBody['id'] ?>" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content glass-panel" style="background: var(--bg-color);">
-                            <div class="modal-header border-0 pb-0">
-                                <h5 class="modal-title fw-bold">Add Comment</h5>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <!-- Comments Section -->
+                <?php if(!empty($postBody['comments'])): ?>
+                <div class="comments-section mt-3 pt-3" style="border-top: 1px solid var(--glass-border);">
+                    <?php foreach($postBody['comments'] as $comment): ?>
+                    <div class="comment-item d-flex gap-3 mb-3">
+                        <img src="<?= base_url(esc($comment['user']['profile_pic'] ?? '')) ?>" class="rounded-circle profile-pic-img" width="32" height="32" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
+                        <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center profile-pic-placeholder" style="width: 32px; height: 32px; overflow: hidden; flex-shrink: 0; border: 1px solid var(--glass-border);">
+                            <i class="bi bi-person-fill text-white fs-5"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-baseline gap-2 mb-1">
+                                <a href="<?= site_url('profile/'.esc($comment['user']['username'] ?? 'unknown')) ?>" class="text-decoration-none">
+                                    <span class="fw-bold" style="color: var(--text-primary); font-size: 0.9rem;"><?= esc(($comment['user']['first_name'] ?? 'Unknown').' '.($comment['user']['last_name'] ?? 'User')) ?></span>
+                                </a>
+                                <span class="text-muted" style="font-size: 0.8rem;">@<?= esc($comment['user']['username'] ?? 'unknown') ?></span>
+                                <span class="text-muted" style="font-size: 0.8rem;">• 
+                                    <?php
+                                        $diff = time() - strtotime($comment['created_at']);
+                                        if($diff < 60) echo 'just now';
+                                        else if($diff < 3600) echo floor($diff/60).'m';
+                                        else if($diff < 86400) echo floor($diff/3600).'h';
+                                        else echo floor($diff/86400).'d';
+                                    ?>
+                                </span>
                             </div>
-                            <form action="<?= site_url('posts/addComment/'.$postBody['id']) ?>" method="POST">
-                                <div class="modal-body">
-                                    <textarea name="comment_text" class="glass-input" rows="3" placeholder="Write your comment..." style="width: 100%; resize: none;"></textarea>
-                                </div>
-                                <div class="modal-footer border-0 pt-0">
-                                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="submit" class="glass-btn">Comment</button>
-                                </div>
-                            </form>
+                            <p class="mb-0" style="font-size: 0.95rem; line-height: 1.4; color: var(--text-primary);"><?= esc($comment['comment_text']) ?></p>
                         </div>
                     </div>
+                    <?php endforeach; ?>
                 </div>
+                <?php endif; ?>
             </div>
 
         <?php endforeach; ?>
     <?php endif; ?>
 </div>
+
+<!-- Modals (outside post loop to avoid stacking issues) -->
+<?php foreach($allPostBodies as $postBody): ?>
+    <!-- Edit Modal -->
+    <?php if ($postBody['user_id'] == session()->get('user_id')): ?>
+    <div class="modal fade" id="editModal<?= $postBody['id'] ?>" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-panel" style="background: var(--bg-color);">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">Edit Post</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="<?= site_url('posts/edit/'.$postBody['id']) ?>" method="POST">
+                    <div class="modal-body">
+                        <textarea name="content" class="glass-input" rows="4" style="width: 100%; resize: none;"><?= esc($postBody['content']) ?></textarea>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="glass-btn">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+    
+    <!-- Comment Modal -->
+    <div class="modal fade" id="commentModal<?= $postBody['id'] ?>" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content glass-panel" style="background: var(--bg-color);">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">Comments</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <?php if(!empty($postBody['comments'])): ?>
+                    <div class="comments-list mb-3" style="max-height: 300px; overflow-y: auto;">
+                        <?php foreach($postBody['comments'] as $comment): ?>
+                        <div class="comment-item d-flex gap-3 mb-3 pb-3" style="border-bottom: 1px solid var(--glass-border);">
+                            <img src="<?= base_url(esc($comment['user']['profile_pic'] ?? '')) ?>" class="rounded-circle profile-pic-img" width="40" height="40" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
+                            <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center profile-pic-placeholder" style="width: 40px; height: 40px; overflow: hidden; flex-shrink: 0; border: 1px solid var(--glass-border);">
+                                <i class="bi bi-person-fill text-white fs-5"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-baseline gap-2 mb-1">
+                                    <a href="<?= site_url('profile/'.esc($comment['user']['username'] ?? 'unknown')) ?>" class="text-decoration-none">
+                                        <span class="fw-bold" style="color: var(--text-primary);"><?= esc(($comment['user']['first_name'] ?? 'Unknown').' '.($comment['user']['last_name'] ?? 'User')) ?></span>
+                                    </a>
+                                    <span class="text-muted" style="font-size: 0.85rem;">@<?= esc($comment['user']['username'] ?? 'unknown') ?></span>
+                                    <span class="text-muted" style="font-size: 0.8rem;">• 
+                                        <?php
+                                            $diff = time() - strtotime($comment['created_at']);
+                                            if($diff < 60) echo 'just now';
+                                            else if($diff < 3600) echo floor($diff/60).'m';
+                                            else if($diff < 86400) echo floor($diff/3600).'h';
+                                            else echo floor($diff/86400).'d';
+                                        ?>
+                                    </span>
+                                </div>
+                                <p class="mb-0" style="font-size: 1rem; line-height: 1.5; color: var(--text-primary);"><?= esc($comment['comment_text']) ?></p>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php else: ?>
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-chat-square-text fs-1 mb-2 opacity-25"></i>
+                        <p>No comments yet. Be the first!</p>
+                    </div>
+                    <?php endif; ?>
+                    <form action="<?= site_url('posts/addComment/'.$postBody['id']) ?>" method="POST">
+                        <div class="d-flex gap-3 align-items-end">
+                            <img src="<?= base_url(esc(session()->get('profile_pic') ?? '')) ?>" class="rounded-circle profile-pic-img" width="40" height="40" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
+                            <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center profile-pic-placeholder" style="width: 40px; height: 40px; overflow: hidden; flex-shrink: 0; border: 1px solid var(--glass-border);">
+                                <i class="bi bi-person-fill text-white fs-5"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <textarea name="comment_text" class="glass-input" rows="2" placeholder="Write a comment..." style="width: 100%; resize: none;"></textarea>
+                            </div>
+                            <button type="submit" class="glass-btn">Comment</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+<?php endforeach; ?>
 
 <?= $this->endSection() ?>

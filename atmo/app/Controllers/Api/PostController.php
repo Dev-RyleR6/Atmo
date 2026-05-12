@@ -37,13 +37,27 @@ class PostController extends BaseController
         $repostModel = new RepostModel();
         
         // Helper function to add social data to a post
-        $addSocialData = function(&$post) use ($likeModel, $commentModel, $repostModel, $userId) {
+        $addSocialData = function(&$post) use ($likeModel, $commentModel, $repostModel, $userId, $userModel) {
             $postId = $post['id'];
             $post['like_count'] = $likeModel->where('post_id', $postId)->countAllResults();
             $post['comment_count'] = $commentModel->where('post_id', $postId)->countAllResults();
             $post['repost_count'] = $repostModel->where('post_id', $postId)->countAllResults();
             $post['is_liked'] = $likeModel->where('user_id', $userId)->where('post_id', $postId)->first() ? true : false;
             $post['is_reposted'] = $repostModel->where('user_id', $userId)->where('post_id', $postId)->first() ? true : false;
+            
+            // Fetch comments with user data
+            $comments = $commentModel->where('post_id', $postId)
+                                     ->orderBy('created_at', 'ASC')
+                                     ->limit(10)
+                                     ->findAll();
+            foreach ($comments as &$comment) {
+                $commentUser = $userModel->find($comment['user_id']);
+                if ($commentUser) {
+                    unset($commentUser['password']);
+                    $comment['user'] = $commentUser;
+                }
+            }
+            $post['comments'] = $comments;
         };
         
         // Fetch original posts
