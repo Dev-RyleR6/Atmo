@@ -19,8 +19,13 @@
         <div class="atmo-layout">
             <!-- Left Sidebar: Navbar -->
             <aside class="sidebar-left">
-                <h3 class="fw-bold mb-1" style="padding-left: 20px;">Atmo</h3>
-                <p class="text-muted small" style="padding-left: 20px;">Own Your Atmosphere</p>
+                <div class="sidebar-header" style="padding: 20px; display: flex; align-items: center; gap: 12px;">
+                    <img src="<?= base_url('atmo_logo.png') ?>" alt="Atmo Logo" style="width: 48px; height: 48px; object-fit: contain;">
+                    <div>
+                        <h3 class="fw-bold mb-0">Atmo</h3>
+                        <p class="text-muted small mb-0">Own Your Atmosphere</p>
+                    </div>
+                </div>
 
                 <ul class="nav-menu">
                     <li class="nav-item">
