@@ -659,11 +659,18 @@ body {
     .nav-label {
         display: none;
     }
+    .sidebar-header {
+        padding: 12px;
+    }
+    .sidebar-header div {
+        display: none;
+    }
 }
 @media (max-width: 768px) {
     .atmo-layout {
         flex-direction: column;
         padding: 0;
+        max-width: 100%;
     }
     .sidebar-left {
         position: fixed;
@@ -674,21 +681,59 @@ body {
         z-index: 1000;
         background: var(--bg-color);
         border-top: 1px solid var(--glass-border);
-        padding: 10px 0;
+        padding: 8px 0;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
     }
     /* When modal is open, lower sidebar z-index */
     .modal.show ~ .atmo-layout .sidebar-left {
         z-index: 999;
     }
+    .sidebar-header,
+    .sidebar-left > div:nth-child(3) {
+        display: none !important;
+    }
     .nav-menu {
         display: flex;
         justify-content: space-evenly;
         margin: 0;
+        padding: 0;
+    }
+    .nav-item {
+        margin: 0;
+    }
+    .nav-link {
+        padding: 8px 16px;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .nav-link i {
+        font-size: 1.5rem;
     }
     .center-feed {
         width: 100%;
         padding: 12px;
         padding-bottom: 80px;
+        max-width: 100%;
+    }
+}
+
+/* Additional Mobile Optimizations */
+@media (max-width: 576px) {
+    .glass-panel {
+        padding: 16px;
+    }
+    .modal-dialog {
+        margin: 8px;
+    }
+    .modal-content {
+        border-radius: 16px;
+    }
+    .interaction-bar {
+        gap: 12px;
+    }
+    .action-btn {
+        padding: 6px 10px;
     }
 }
 

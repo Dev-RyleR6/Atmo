@@ -181,9 +181,6 @@
                             <span><?= $postBody['repost_count'] ?></span>
                         </button>
                     </form>
-                    <button class="action-btn">
-                        <i class="bi bi-share"></i>
-                    </button>
                 </div>
                 
                 <!-- Comments Section -->

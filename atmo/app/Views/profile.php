@@ -25,18 +25,18 @@
         <?php endif; ?>
         
         <!-- Stats -->
-        <div class="d-flex justify-content-center align-items-center mb-4" style="gap: 32px;">
-            <div class="text-center cursor-pointer profile-stat-item" id="followersTab" style="min-width: 80px; display: flex; flex-direction: column; align-items: center; padding: 8px 0;">
-                <div class="profile-stat-number" style="font-size: 1.6rem; font-weight: 700; color: var(--text-primary); line-height: 1; margin-bottom: 4px;"><?= esc($followers_count) ?></div>
-                <div class="profile-stat-label" style="font-size: 0.875rem; color: var(--text-secondary); line-height: 1;">Followers</div>
+        <div class="d-flex justify-content-center align-items-center mb-4" style="gap: 16px;">
+            <div class="text-center cursor-pointer profile-stat-item" id="followersTab" style="min-width: 70px; display: flex; flex-direction: column; align-items: center; padding: 8px 0;">
+                <div class="profile-stat-number" style="font-size: 1.4rem; font-weight: 700; color: var(--text-primary); line-height: 1; margin-bottom: 4px;"><?= esc($followers_count) ?></div>
+                <div class="profile-stat-label" style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1;">Followers</div>
             </div>
-            <div class="text-center cursor-pointer profile-stat-item" id="followingTab" style="min-width: 80px; display: flex; flex-direction: column; align-items: center; padding: 8px 0;">
-                <div class="profile-stat-number" style="font-size: 1.6rem; font-weight: 700; color: var(--text-primary); line-height: 1; margin-bottom: 4px;"><?= esc($following_count) ?></div>
-                <div class="profile-stat-label" style="font-size: 0.875rem; color: var(--text-secondary); line-height: 1;">Following</div>
+            <div class="text-center cursor-pointer profile-stat-item" id="followingTab" style="min-width: 70px; display: flex; flex-direction: column; align-items: center; padding: 8px 0;">
+                <div class="profile-stat-number" style="font-size: 1.4rem; font-weight: 700; color: var(--text-primary); line-height: 1; margin-bottom: 4px;"><?= esc($following_count) ?></div>
+                <div class="profile-stat-label" style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1;">Following</div>
             </div>
-            <div class="text-center profile-stat-item" style="min-width: 80px; display: flex; flex-direction: column; align-items: center; padding: 8px 0;">
-                <div class="profile-stat-number" style="font-size: 1.6rem; font-weight: 700; color: var(--text-primary); line-height: 1; margin-bottom: 4px;"><?= count($posts) ?></div>
-                <div class="profile-stat-label" style="font-size: 0.875rem; color: var(--text-secondary); line-height: 1;">Posts</div>
+            <div class="text-center profile-stat-item" style="min-width: 70px; display: flex; flex-direction: column; align-items: center; padding: 8px 0;">
+                <div class="profile-stat-number" style="font-size: 1.4rem; font-weight: 700; color: var(--text-primary); line-height: 1; margin-bottom: 4px;"><?= count($posts) ?></div>
+                <div class="profile-stat-label" style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1;">Posts</div>
             </div>
         </div>
     </div>
@@ -233,9 +233,6 @@
                         <span><?= $postBody['repost_count'] ?></span>
                     </button>
                 </form>
-                <button class="action-btn">
-                    <i class="bi bi-share"></i>
-                </button>
             </div>
             
             <!-- Comments Section -->
