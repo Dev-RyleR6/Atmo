@@ -66,16 +66,22 @@ body {
 .sidebar-left {
     position: sticky;
     top: 20px;
-    width: 250px;
+    width: 260px;
     height: calc(100vh - 40px);
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--border-radius);
+    padding: 16px;
 }
 
 .center-feed {
     width: 100%;
-    max-width: 600px;
+    max-width: 640px;
     flex-shrink: 1;
     min-height: 100vh;
 }
@@ -83,7 +89,7 @@ body {
 .sidebar-right {
     position: sticky;
     top: 20px;
-    width: 350px;
+    width: 320px;
     height: calc(100vh - 40px);
     flex-shrink: 0;
 }
@@ -92,33 +98,37 @@ body {
 .nav-menu {
     list-style: none;
     padding: 0;
-    margin: 30px 0;
+    margin: 20px 0;
 }
 
 .nav-item {
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 }
 
 .nav-link {
     display: flex;
     align-items: center;
-    gap: 16px;
-    font-size: 1.1rem;
+    gap: 14px;
+    font-size: 1rem;
     font-weight: 600;
     color: var(--text-secondary);
-    padding: 12px 20px;
-    border-radius: 999px;
-    transition: all 0.2s ease;
+    padding: 12px 16px;
+    border-radius: 12px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     text-decoration: none;
 }
 
 .nav-link:hover, .nav-link.active {
     color: var(--text-primary);
-    background: var(--glass-border);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-link.active {
+    background: rgba(255, 255, 255, 0.12);
 }
 
 .nav-link i {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
 }
 
 /* Forms & Inputs */
@@ -144,24 +154,27 @@ body {
     background: var(--text-primary);
     color: var(--bg-color);
     border: none;
-    padding: 10px 24px;
-    border-radius: 999px;
+    padding: 11px 24px;
+    border-radius: 12px;
     font-weight: 700;
     font-size: 0.95rem;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     z-index: 10002;
     pointer-events: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .glass-btn:hover {
-    opacity: 0.9;
-    transform: scale(1.02);
+    opacity: 0.92;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
 .glass-btn:active {
-    transform: scale(0.98);
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 /* Post Composer */
@@ -264,8 +277,8 @@ body {
     cursor: pointer;
     font-size: 0.9rem;
     padding: 8px 12px;
-    border-radius: 99px;
-    transition: all 0.2s ease;
+    border-radius: 8px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .action-btn:first-child {
@@ -273,16 +286,16 @@ body {
 }
 
 .action-btn i {
-    font-size: 1.2rem;
+    font-size: 1.25rem;
 }
 
 .action-btn:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.06);
 }
 
-.action-btn.like-btn:hover { color: #f91880; background: rgba(249, 24, 128, 0.1); }
-.action-btn.comment-btn:hover { color: #1d9bf0; background: rgba(29, 155, 240, 0.1); }
-.action-btn.repost-btn:hover { color: #00ba7c; background: rgba(0, 186, 124, 0.1); }
+.action-btn.like-btn:hover, .action-btn.like-btn.text-danger { color: #f91880; background: rgba(249, 24, 128, 0.12); }
+.action-btn.comment-btn:hover { color: #1d9bf0; background: rgba(29, 155, 240, 0.12); }
+.action-btn.repost-btn:hover, .action-btn.repost-btn.text-success { color: #00ba7c; background: rgba(0, 186, 124, 0.12); }
 
 /* Feed Tabs */
 .feed-tabs {
@@ -622,12 +635,14 @@ body {
 
 /* Sidebar header styling */
 .sidebar-header {
+    padding: 8px 12px;
     border-bottom: 1px solid var(--glass-border);
     margin-bottom: 8px;
 }
 
 .sidebar-header h3 {
     line-height: 1.1;
+    font-size: 1.3rem;
 }
 
 .sidebar-header img {
@@ -655,12 +670,13 @@ body {
 @media (max-width: 900px) {
     .sidebar-left {
         width: auto;
+        padding: 12px;
     }
     .nav-label {
         display: none;
     }
     .sidebar-header {
-        padding: 12px;
+        padding: 8px;
     }
     .sidebar-header div {
         display: none;
@@ -681,6 +697,10 @@ body {
         z-index: 1000;
         background: var(--bg-color);
         border-top: 1px solid var(--glass-border);
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+        border-bottom: none;
         padding: 8px 0;
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
@@ -703,12 +723,12 @@ body {
         margin: 0;
     }
     .nav-link {
-        padding: 8px 16px;
+        padding: 10px 16px;
         flex-direction: column;
         gap: 4px;
     }
     .nav-link i {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
     }
     .center-feed {
         width: 100%;

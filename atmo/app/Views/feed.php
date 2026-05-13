@@ -50,7 +50,7 @@
 <!-- Feed Header Tabs -->
 <div class="feed-tabs d-flex gap-2 mb-4">
     <div class="feed-tab active px-4 py-2">For You</div>
-    <div class="feed-tab px-4 py-2">Following</div>
+    <div class="feed-tab px-4 py-2">Your Atmosphere</div>
 </div>
 
 <!-- Feed List -->
