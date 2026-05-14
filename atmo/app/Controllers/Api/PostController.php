@@ -256,4 +256,44 @@ class PostController extends BaseController
             'repost_count' => $repostCount
         ]);
     }
+
+    public function addComment($postId)
+    {
+        $userId = session()->get('user_id');
+        $text = $this->request->getPost('comment_text');
+
+        if (empty($text)) {
+            return $this->fail('Comment text cannot be empty');
+        }
+
+        $postModel = new PostModel();
+        $post = $postModel->find($postId);
+        if (!$post) {
+            return $this->failNotFound('Post not found');
+        }
+
+        $commentModel = new CommentModel();
+        $commentId = $commentModel->insert([
+            'post_id' => $postId,
+            'user_id' => $userId,
+            'comment_text' => $text
+        ]);
+
+        $comment = $commentModel->find($commentId);
+
+        $userModel = new \App\Models\UserModel();
+        $commentUser = $userModel->find($userId);
+        if ($commentUser) {
+            unset($commentUser['password']);
+            $comment['user'] = $commentUser;
+        }
+
+        $commentCount = $commentModel->where('post_id', $postId)->countAllResults();
+
+        return $this->respond([
+            'status' => 'success',
+            'comment' => $comment,
+            'comment_count' => $commentCount
+        ]);
+    }
 }

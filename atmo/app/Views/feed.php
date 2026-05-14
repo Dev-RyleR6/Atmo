@@ -213,7 +213,7 @@
                     }
                     
                     foreach($commentsToShow as $comment): ?>
-                    <div class="comment-item" style="padding: 8px; gap: 8px; margin-bottom: 8px;">
+                    <div class="comment-item" data-user-id="<?= $comment['user_id'] ?>" style="padding: 8px; gap: 8px; margin-bottom: 8px;">
                         <img src="<?= base_url(esc($comment['user']['profile_pic'] ?? '')) ?>" class="rounded-circle profile-pic-img flex-shrink-0" width="32" height="32" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
                         <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center profile-pic-placeholder flex-shrink-0" style="width: 32px; height: 32px; overflow: hidden; border: 1px solid var(--glass-border);">
                             <i class="bi bi-person-fill text-white fs-5"></i>
@@ -301,7 +301,7 @@
                     <?php if(!empty($postBody['comments'])): ?>
                     <div class="comments-list mb-3" style="max-height: 300px; overflow-y: auto;">
                         <?php foreach($postBody['comments'] as $comment): ?>
-                        <div class="comment-item">
+                        <div class="comment-item" data-user-id="<?= $comment['user_id'] ?>">
                             <img src="<?= base_url(esc($comment['user']['profile_pic'] ?? '')) ?>" class="rounded-circle profile-pic-img flex-shrink-0" width="40" height="40" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
                             <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center profile-pic-placeholder flex-shrink-0" style="width: 40px; height: 40px; overflow: hidden; border: 1px solid var(--glass-border);">
                                 <i class="bi bi-person-fill text-white fs-5"></i>

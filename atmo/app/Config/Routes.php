@@ -55,4 +55,5 @@ $routes->group('api', function($routes) {
     $routes->delete('posts/(:num)', 'Api\PostController::delete/$1');
     $routes->post('posts/toggleLike/(:num)', 'Api\PostController::toggleLike/$1');
     $routes->post('posts/toggleRepost/(:num)', 'Api\PostController::toggleRepost/$1');
+    $routes->post('posts/addComment/(:num)', 'Api\PostController::addComment/$1');
 });
