@@ -167,7 +167,6 @@ class UserController extends BaseController
         $rules = [
             'first_name'  => 'permit_empty|string|max_length[100]',
             'last_name'   => 'permit_empty|string|max_length[100]',
-            'email'       => "permit_empty|valid_email|is_unique[users.email,id,$userId]",
             'dob'         => 'permit_empty|valid_date',
             'sex'         => 'permit_empty|in_list[Male,Female,Other,Prefer not to say]',
             'bio'         => 'permit_empty|string|max_length[500]',
@@ -185,7 +184,7 @@ class UserController extends BaseController
 
         $data = [];
         
-        $fieldsToUpdate = ['first_name', 'last_name', 'email', 'dob', 'sex', 'bio'];
+        $fieldsToUpdate = ['first_name', 'last_name', 'dob', 'sex', 'bio'];
         foreach($fieldsToUpdate as $field) {
             $val = $this->request->getPost($field);
             // Sanitize string inputs
@@ -211,6 +210,15 @@ class UserController extends BaseController
         }
 
         if ($userModel->skipValidation(true)->update($userId, $data)) {
+            if (isset($data['profile_pic'])) {
+                session()->set('profile_pic', $data['profile_pic']);
+            }
+            if (isset($data['first_name'])) {
+                session()->set('first_name', $data['first_name']);
+            }
+            if (isset($data['last_name'])) {
+                session()->set('last_name', $data['last_name']);
+            }
             return redirect()->back()->with('success', 'Profile updated successfully.');
         }
 

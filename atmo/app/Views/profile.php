@@ -79,16 +79,23 @@
                         </div>
                     </div>
                     <div class="mb-4">
-                        <label class="form-label small text-muted fw-semibold">Email</label>
-                        <input type="email" name="email" class="glass-input" value="<?= esc(old('email') ?? $user['email']) ?>">
-                    </div>
-                    <div class="mb-4">
                         <label class="form-label small text-muted fw-semibold">Bio</label>
                         <textarea name="bio" class="glass-input" rows="3" placeholder="Tell us about yourself..."><?= esc(old('bio') ?? $user['bio']) ?></textarea>
                     </div>
                     <div class="mb-4">
                         <label class="form-label small text-muted fw-semibold d-block">Profile Picture</label>
-                        <input type="file" name="profile_pic" class="glass-input" accept="image/*" style="font-size: 0.9rem;">
+                        <div class="profile-pic-preview-container mb-2" style="display: flex; align-items: center; gap: 12px;">
+                            <img id="editProfilePicPreview" 
+                                 src="<?= base_url(esc($user['profile_pic'] ?? '')) ?>" 
+                                 class="rounded-circle" 
+                                 width="60" 
+                                 height="60"
+                                 onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
+                            <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center" style="width: 60px; height: 60px; overflow: hidden; border: 1px solid var(--glass-border);">
+                                <i class="bi bi-person-fill text-white fs-3"></i>
+                            </div>
+                        </div>
+                        <input type="file" name="profile_pic" id="editProfilePicInput" class="glass-input" accept="image/*" style="font-size: 0.9rem;">
                     </div>
                     <div class="d-flex justify-content-end gap-2 mt-4">
                         <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-toggle="collapse" data-bs-target="#editProfileForm">Cancel</button>
@@ -394,6 +401,27 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Profile picture preview
+    const profilePicInput = document.getElementById('editProfilePicInput');
+    const profilePicPreview = document.getElementById('editProfilePicPreview');
+    
+    if (profilePicInput && profilePicPreview) {
+        profilePicInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    profilePicPreview.src = e.target.result;
+                    profilePicPreview.classList.remove('d-none');
+                    if (profilePicPreview.nextElementSibling) {
+                        profilePicPreview.nextElementSibling.classList.add('d-none');
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
     const username = '<?= esc($user['username']) ?>';
     const followersTab = document.getElementById('followersTab');
     const followingTab = document.getElementById('followingTab');
