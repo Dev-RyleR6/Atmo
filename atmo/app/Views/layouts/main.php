@@ -31,15 +31,15 @@
 
                 <ul class="nav-menu">
                     <li class="nav-item">
-                        <a class="nav-link <?= current_url() == site_url('feed') ? 'active' : '' ?>"
-                            href="<?= site_url('feed') ?>">
+                        <a class="nav-link <?= (isset($current_feed_type) && $current_feed_type == 'your_atmosphere') ? 'active' : '' ?>"
+                            href="<?= site_url('feed?feed=your_atmosphere') ?>">
                             <i
-                                class="bi <?= current_url() == site_url('feed') ? 'bi-house-door-fill' : 'bi-house-door' ?>"></i>
+                                class="bi <?= (isset($current_feed_type) && $current_feed_type == 'your_atmosphere') ? 'bi-house-door-fill' : 'bi-house-door' ?>"></i>
                             <span class="nav-label">Home</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link <?= (isset($current_feed_type) && $current_feed_type == 'for_you') ? 'active' : '' ?>" href="<?= site_url('feed?feed=for_you') ?>">
                             <i class="bi bi-compass"></i>
                             <span class="nav-label">Explore</span>
                         </a>

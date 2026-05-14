@@ -49,7 +49,7 @@
 
 <!-- Feed Header Tabs -->
 <div class="feed-tabs d-flex gap-1 mb-3">
-    <div class="feed-tab <?= (isset($current_feed_type) && $current_feed_type == 'for_you') ? 'active' : '' ?> px-3 py-2" data-feed-type="for_you">For You</div>
+    <div class="feed-tab <?= (isset($current_feed_type) && $current_feed_type == 'for_you') ? 'active' : '' ?> px-3 py-2" data-feed-type="for_you">Explore</div>
     <div class="feed-tab <?= (isset($current_feed_type) && $current_feed_type == 'your_atmosphere') ? 'active' : '' ?> px-3 py-2" data-feed-type="your_atmosphere">Your Atmosphere</div>
 </div>
 
