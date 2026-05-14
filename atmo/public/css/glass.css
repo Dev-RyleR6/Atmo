@@ -648,6 +648,43 @@ body {
     padding-left: 14px !important;
 }
 
+.profile-pic-preview-container img {
+    border: 2px solid var(--glass-border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+#editProfileForm .glass-panel {
+    border: 1px solid rgba(255,255,255,0.15);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+
+#editProfileForm .glass-input {
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    border-radius: 12px;
+    padding: 12px 16px !important;
+}
+
+#editProfileForm .glass-input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+#editProfileForm .form-label {
+    color: var(--text-primary);
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+#editProfileForm .btn-secondary {
+    border-radius: 12px;
+}
+
+#editProfileForm .glass-btn {
+    border-radius: 12px;
+}
+
 .repost-header {
     display: flex;
     align-items: center;
