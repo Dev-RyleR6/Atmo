@@ -30,17 +30,31 @@ class PostController extends BaseController
         $repostModel = new RepostModel();
         
         // Fetch original posts
-        $posts = $postModel->whereIn('user_id', $followingIds)
-                           ->where('visibility !=', 'private')
-                           ->orderBy('created_at', 'DESC')
-                           ->limit(50)
-                           ->findAll();
-                           
-        // Fetch Reposts and merge
-        $reposts = $repostModel->whereIn('user_id', $followingIds)
+        if (count($followingIds) > 1) {
+            $posts = $postModel->whereIn('user_id', $followingIds)
+                               ->where('visibility !=', 'private')
                                ->orderBy('created_at', 'DESC')
                                ->limit(50)
                                ->findAll();
+        } else {
+            $posts = $postModel->where('visibility', 'public')
+                               ->orderBy('created_at', 'DESC')
+                               ->limit(50)
+                               ->findAll();
+        }
+                           
+        // Fetch Reposts and merge
+        if (count($followingIds) > 1) {
+            $reposts = $repostModel->whereIn('user_id', $followingIds)
+                                   ->orderBy('created_at', 'DESC')
+                                   ->limit(50)
+                                   ->findAll();
+        } else {
+            $reposts = $repostModel->where('user_id', $userId)
+                                   ->orderBy('created_at', 'DESC')
+                                   ->limit(50)
+                                   ->findAll();
+        }
 
         $userModel = new UserModel();
         
@@ -165,11 +179,17 @@ class PostController extends BaseController
     public function toggleRepost($postId)
     {
         $userId = session()->get('user_id');
+        $postModel = new PostModel();
         $repostModel = new RepostModel();
         
-        $existing = $repostModel->where('user_id', $userId)->where('post_id', $postId)->first();
+        $originalPost = $postModel->find($postId);
+        if (!$originalPost) {
+            return redirect()->back()->with('error', 'Post not found');
+        }
 
-        if ($existing) {
+        $existingRepost = $repostModel->where('user_id', $userId)->where('post_id', $postId)->first();
+
+        if ($existingRepost) {
             $repostModel->where('user_id', $userId)->where('post_id', $postId)->delete();
         } else {
             $repostModel->insert(['user_id' => $userId, 'post_id' => $postId]);

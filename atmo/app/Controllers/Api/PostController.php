@@ -124,8 +124,12 @@ class PostController extends BaseController
         $rules = [
             'content'    => 'permit_empty|string',
             'visibility' => 'required|in_list[public,followers,private]',
-            'media'      => 'uploaded[media]|max_size[media,10240]|ext_in[media,png,jpg,jpeg,gif,mp4]|permit_empty',
         ];
+
+        $file = $this->request->getFile('media');
+        if ($file && $file->isValid()) {
+            $rules['media'] = 'max_size[media,10240]|ext_in[media,png,jpg,jpeg,gif,mp4]';
+        }
 
         if (!$this->validate($rules)) {
             return $this->fail($this->validator->getErrors());
@@ -134,27 +138,31 @@ class PostController extends BaseController
         $mediaPath = null;
         $mediaType = 'text';
 
-        $file = $this->request->getFile('media');
         if ($file && $file->isValid() && !$file->hasMoved()) {
             $newName = $file->getRandomName();
             $file->move(FCPATH . 'uploads/posts', $newName);
             $mediaPath = 'uploads/posts/' . $newName;
             
             $mime = $file->getMimeType();
-            $mediaType = str_contains($mime, 'video') ? 'video' : 'image';
+            $mediaType = strpos($mime, 'video') !== false ? 'video' : 'image';
+        }
+
+        $content = $this->request->getVar('content');
+        if (empty($content) && empty($mediaPath)) {
+            return $this->fail('Post cannot be completely empty.');
         }
 
         $postModel = new PostModel();
 
         $data = [
             'user_id'    => $userId,
-            'content'    => $this->request->getVar('content'),
+            'content'    => $content,
             'media_path' => $mediaPath,
             'media_type' => $mediaType,
             'visibility' => $this->request->getVar('visibility'),
         ];
 
-        if ($postModel->insert($data)) {
+        if ($postModel->skipValidation(true)->insert($data)) {
             $data['id'] = $postModel->getInsertID();
             return $this->respondCreated(['status' => 'success', 'post' => $data]);
         }
@@ -222,8 +230,14 @@ class PostController extends BaseController
     public function toggleRepost($postId)
     {
         $userId = session()->get('user_id');
+        $postModel = new PostModel();
         $repostModel = new RepostModel();
         
+        $originalPost = $postModel->find($postId);
+        if (!$originalPost) {
+            return $this->failNotFound('Post not found');
+        }
+
         $existing = $repostModel->where('user_id', $userId)->where('post_id', $postId)->first();
 
         if ($existing) {

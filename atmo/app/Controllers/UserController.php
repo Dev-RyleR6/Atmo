@@ -34,10 +34,16 @@ class UserController extends BaseController
         $repostModel = new \App\Models\RepostModel();
         $userModel = new UserModel();
         
+        // Fetch original posts
         $posts = $postModel->where('user_id', $user['id'])
                            ->where('visibility !=', 'private')
                            ->orderBy('created_at', 'DESC')
                            ->findAll();
+                           
+        // Fetch Reposts
+        $reposts = $repostModel->where('user_id', $user['id'])
+                               ->orderBy('created_at', 'DESC')
+                               ->findAll();
         
         // Helper function to add social data to a post
         $addSocialData = function(&$post) use ($likeModel, $commentModel, $repostModel, $loggedInUserId, $userModel) {
@@ -63,11 +69,52 @@ class UserController extends BaseController
             $post['comments'] = $comments;
         };
         
-        // Process posts
+        // Process original posts
+        $validPosts = [];
         foreach ($posts as &$post) {
+            $post['type'] = 'original';
+            if (empty($post['content']) && empty($post['media_path'])) {
+                continue;
+            }
             $post['user'] = $user;
             $addSocialData($post);
+            $validPosts[] = $post;
         }
+        $posts = $validPosts;
+
+        // Process reposts
+        $validReposts = [];
+        foreach ($reposts as &$repost) {
+            $repost['type'] = 'repost';
+            $repost['reposted_by'] = $user;
+            
+            $originalPost = $postModel->find($repost['post_id']);
+            if (!$originalPost) {
+                continue;
+            }
+            if ($originalPost['visibility'] == 'private') {
+                continue;
+            }
+            
+            $originalUser = $userModel->find($originalPost['user_id']);
+            if (!$originalUser) {
+                continue;
+            }
+            unset($originalUser['password']);
+            $originalPost['user'] = $originalUser;
+            $addSocialData($originalPost);
+            
+            $repost['original_post'] = $originalPost;
+            $repost['created_at'] = $repost['created_at'];
+            $validReposts[] = $repost;
+        }
+
+        // Merge and sort
+        $allPosts = array_merge($posts, $validReposts);
+        usort($allPosts, function($a, $b) {
+            return strtotime($b['created_at']) - strtotime($a['created_at']);
+        });
+        $posts = $allPosts;
                            
         // Get Follower / Following count
         $followModel = new FollowModel();

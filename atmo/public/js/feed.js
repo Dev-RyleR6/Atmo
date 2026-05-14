@@ -226,38 +226,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Post Creation via AJAX
-    if (composerForm) {
-        composerForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(composerForm);
-            const submitBtn = composerForm.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
-            submitBtn.disabled = true;
-
-            try {
-                const response = await fetch('/api/posts', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (response.ok) {
-                    // Reload the page to see the new post
-                    window.location.reload();
-                } else {
-                    alert('Failed to create post');
-                }
-            } catch (error) {
-                console.error('Error creating post:', error);
-                alert('Error creating post');
-            } finally {
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-            }
-        });
-    }
+    // Let the form submit normally to the regular endpoint (it's already working!)
+    // We'll remove the AJAX override for now to avoid issues
 
     // Toggle Like via AJAX
     document.addEventListener('click', async function(e) {

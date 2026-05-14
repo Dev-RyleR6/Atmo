@@ -125,23 +125,47 @@
         <?php endif; ?>
     </div>
 <?php else: ?>
-    <?php foreach($posts as $postBody): ?>
-        <div class="glass-panel post-card" style="padding: 12px 16px;">
+    <?php foreach($posts as $post): ?>
+        <?php 
+            $isRepost = ($post['type'] ?? 'original') == 'repost';
+            if($isRepost) {
+                if (empty($post['original_post']) || empty($post['original_post']['user'])) {
+                    continue;
+                }
+                $postBody = $post['original_post'];
+            } else {
+                if (empty($post['user'])) {
+                    continue;
+                }
+                $postBody = $post;
+            }
+        ?>
+
+        <div class="glass-panel post-card <?= $isRepost ? 'post-card-repost' : '' ?>" style="padding: 12px 16px;">
+            <?php if($isRepost): ?>
+                <div class="d-flex align-items-center gap-2 mb-2 repost-header" style="padding-left: 4px;">
+                    <i class="bi bi-arrow-repeat text-muted"></i>
+                    <span class="text-muted small fw-medium">
+                        <?= $is_own_profile ? 'You' : esc($post['reposted_by']['first_name'] ?? $post['reposted_by']['username'] ?? 'Someone') ?> reposted
+                    </span>
+                </div>
+            <?php endif; ?>
+
             <div class="d-flex align-items-start mb-2">
-                <img src="<?= base_url(esc($user['profile_pic'] ?? '')) ?>" class="rounded-circle me-2 profile-pic-img" width="40" height="40" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
+                <img src="<?= base_url(esc($postBody['user']['profile_pic'] ?? '')) ?>" class="rounded-circle me-2 profile-pic-img" width="40" height="40" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
                 <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center me-2 profile-pic-placeholder" style="width: 40px; height: 40px; overflow: hidden; border: 1.5px solid var(--glass-border);">
                     <i class="bi bi-person-fill text-white fs-4"></i>
                 </div>
                 <div class="flex-grow-1">
                     <div class="d-flex align-items-baseline gap-1 flex-wrap">
-                        <a href="<?= site_url('profile/'.esc($user['username'])) ?>" class="text-decoration-none">
-                            <h6 class="mb-0 fw-bold fs-6" style="color: var(--text-primary);"><?= esc($user['first_name'].' '.$user['last_name']) ?> 
-                                <?php if(!empty($user['is_verified'])): ?>
+                        <a href="<?= site_url('profile/'.esc($postBody['user']['username'])) ?>" class="text-decoration-none">
+                            <h6 class="mb-0 fw-bold fs-6" style="color: var(--text-primary);"><?= esc($postBody['user']['first_name'].' '.$postBody['user']['last_name']) ?> 
+                                <?php if(!empty($postBody['user']['is_verified'])): ?>
                                     <i class="bi bi-patch-check-fill text-primary small"></i>
                                 <?php endif; ?>
                             </h6>
                         </a>
-                        <span class="text-muted small">@<?= esc($user['username']) ?> • 
+                        <span class="text-muted small">@<?= esc($postBody['user']['username']) ?> • 
                             <span title="<?= date('M j, Y g:i A', strtotime($postBody['created_at'])) ?>">
                                 <?php
                                     $diff = time() - strtotime($postBody['created_at']);
@@ -154,8 +178,8 @@
                         </span>
                     </div>
                 </div>
-                <!-- Post Options (only for own profile) -->
-                <?php if($is_own_profile): ?>
+                <!-- Post Options (only for own profile and original post) -->
+                <?php if($is_own_profile && !$isRepost): ?>
                 <div class="dropdown">
                     <i class="bi bi-three-dots text-muted fs-5" style="cursor:pointer;" data-bs-toggle="dropdown"></i>
                     <ul class="dropdown-menu dropdown-menu-end glass-panel" style="background: var(--bg-color); border: 1px solid var(--glass-border); padding: 6px; min-width: 140px;">
@@ -176,8 +200,8 @@
                 <?php endif; ?>
             </div>
 
-            <!-- Edit Modal (only for own profile) -->
-            <?php if($is_own_profile): ?>
+            <!-- Edit Modal (only for own profile and original post) -->
+            <?php if($is_own_profile && !$isRepost): ?>
             <div class="modal fade" id="editModal<?= $postBody['id'] ?>" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content glass-panel" style="background: var(--bg-color);">

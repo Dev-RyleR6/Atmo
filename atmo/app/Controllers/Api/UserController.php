@@ -177,9 +177,14 @@ class UserController extends BaseController
         $followedIds = array_column($following, 'followed_id');
         $followedIds[] = $loggedInUserId; // Don't suggest self
         
-        $suggestedUsers = $userModel->whereNotIn('id', $followedIds)
-                                     ->limit(5)
-                                     ->findAll();
+        $suggestedUsers = [];
+        if (!empty($followedIds)) {
+            $suggestedUsers = $userModel->whereNotIn('id', $followedIds)
+                                        ->limit(5)
+                                        ->findAll();
+        } else {
+            $suggestedUsers = $userModel->limit(5)->findAll();
+        }
                                      
         foreach ($suggestedUsers as &$user) {
             unset($user['password']);

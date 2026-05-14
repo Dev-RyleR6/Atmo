@@ -67,16 +67,14 @@
         ?>
         <?php foreach($posts as $post): ?>
             <!-- Repost Context -->
-            <?php if($post['type'] == 'repost'): ?>
+            <?php $isRepost = ($post['type'] == 'repost'); ?>
+            <?php if($isRepost): ?>
                 <?php 
                     // Skip if original post or user data is missing
                     if (empty($post['original_post']) || empty($post['original_post']['user'])) {
                         continue;
                     }
                 ?>
-                <div class="text-muted small mb-1 d-flex align-items-center gap-2 fw-semibold" style="padding: 0 8px; margin-left: 48px;">
-                    <i class="bi bi-arrow-repeat fs-6"></i> <?= esc($post['reposted_by']['username'] ?? 'Someone') ?> reposted
-                </div>
                 <?php $postBody = $post['original_post']; ?>
             <?php else: ?>
                 <?php 
@@ -90,7 +88,18 @@
 
             <?php $allPostBodies[] = $postBody; ?>
 
-            <div class="glass-panel post-card" style="padding: 12px 16px;">
+            <div class="glass-panel post-card <?= $isRepost ? 'post-card-repost' : '' ?>" style="padding: 12px 16px;">
+                <?php if($isRepost): ?>
+                    <div class="d-flex align-items-center gap-2 mb-2 repost-header" style="padding-left: 4px;">
+                        <i class="bi bi-arrow-repeat text-muted"></i>
+                        <span class="text-muted small fw-medium">
+                            <?php 
+                                $isOwnRepost = session()->get('user_id') == ($post['reposted_by']['id'] ?? null);
+                                echo $isOwnRepost ? 'You' : esc($post['reposted_by']['first_name'] ?? $post['reposted_by']['username'] ?? 'Someone');
+                            ?> reposted
+                        </span>
+                    </div>
+                <?php endif; ?>
                 <!-- Post Header -->
                 <div class="d-flex align-items-start mb-2">
                     <img src="<?= base_url(esc($postBody['user']['profile_pic'] ?? '')) ?>" class="rounded-circle me-2 profile-pic-img" width="40" height="40" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
