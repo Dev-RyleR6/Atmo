@@ -167,6 +167,45 @@ document.addEventListener('DOMContentLoaded', function() {
         observer.observe(card);
     });
     
+    // Suggested Users Logic
+    const suggestedUsersList = document.getElementById('suggestedUsersList');
+    if (suggestedUsersList) {
+        fetch('/api/users/suggested')
+            .then(response => response.json())
+            .then(users => {
+                if (users.length === 0) {
+                    suggestedUsersList.innerHTML = '<div class="text-muted small">No suggestions right now.</div>';
+                    return;
+                }
+
+                suggestedUsersList.innerHTML = users.map(user => `
+                    <div class="suggested-user-item">
+                        <a href="/profile/${user.username}" class="text-decoration-none">
+                            <img src="${user.profile_pic ? '/'+user.profile_pic : ''}" 
+                                 class="suggested-user-avatar profile-pic-img"
+                                 onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
+                            <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center suggested-user-avatar" style="border: 1px solid var(--glass-border);">
+                                <i class="bi bi-person-fill text-white"></i>
+                            </div>
+                        </a>
+                        <div class="suggested-user-info">
+                            <a href="/profile/${user.username}" class="text-decoration-none">
+                                <div class="suggested-user-name text-truncate">${user.first_name} ${user.last_name}</div>
+                                <div class="suggested-user-username text-truncate">@${user.username}</div>
+                            </a>
+                        </div>
+                        <form action="/users/toggleFollow/${user.id}" method="POST" class="m-0">
+                            <button type="submit" class="glass-btn btn-sm" style="padding: 4px 12px; font-size: 0.75rem;">Follow</button>
+                        </form>
+                    </div>
+                `).join('');
+            })
+            .catch(error => {
+                console.error('Error fetching suggested users:', error);
+                suggestedUsersList.innerHTML = '<div class="text-muted small">Failed to load suggestions.</div>';
+            });
+    }
+
     // Close search dropdown when any modal opens
     document.addEventListener('show.bs.modal', function () {
         if (searchDropdown) {

@@ -43,6 +43,7 @@ $routes->group('', ['filter' => 'auth_web'], function($routes) {
 // API Routes
 $routes->group('api', function($routes) {
     $routes->get('users/search', 'Api\UserController::search');
+    $routes->get('users/suggested', 'Api\UserController::suggested');
     $routes->get('users/(:segment)', 'Api\UserController::show/$1');
     $routes->get('users/followers/(:segment)', 'Api\UserController::followers/$1');
     $routes->get('users/following/(:segment)', 'Api\UserController::following/$1');

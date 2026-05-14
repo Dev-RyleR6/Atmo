@@ -165,4 +165,26 @@ class UserController extends BaseController
             'following' => $following
         ]);
     }
+
+    public function suggested()
+    {
+        $loggedInUserId = session()->get('user_id');
+        $userModel = new UserModel();
+        $followModel = new \App\Models\FollowModel();
+        
+        // Get IDs of users already followed
+        $following = $followModel->where('follower_id', $loggedInUserId)->findAll();
+        $followedIds = array_column($following, 'followed_id');
+        $followedIds[] = $loggedInUserId; // Don't suggest self
+        
+        $suggestedUsers = $userModel->whereNotIn('id', $followedIds)
+                                     ->limit(5)
+                                     ->findAll();
+                                     
+        foreach ($suggestedUsers as &$user) {
+            unset($user['password']);
+        }
+        
+        return $this->respond($suggestedUsers);
+    }
 }

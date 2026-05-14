@@ -126,14 +126,14 @@
     </div>
 <?php else: ?>
     <?php foreach($posts as $postBody): ?>
-        <div class="glass-panel post-card" style="border-radius: var(--border-radius); padding: 16px 20px;">
-            <div class="d-flex align-items-center mb-3">
-                <img src="<?= base_url(esc($user['profile_pic'] ?? '')) ?>" class="rounded-circle me-3 profile-pic-img" width="48" height="48" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
-                <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center me-3 profile-pic-placeholder" style="width: 48px; height: 48px; overflow: hidden; border: 2px solid var(--glass-border);">
-                    <i class="bi bi-person-fill text-white fs-3"></i>
+        <div class="glass-panel post-card" style="padding: 12px 16px;">
+            <div class="d-flex align-items-start mb-2">
+                <img src="<?= base_url(esc($user['profile_pic'] ?? '')) ?>" class="rounded-circle me-2 profile-pic-img" width="40" height="40" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
+                <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center me-2 profile-pic-placeholder" style="width: 40px; height: 40px; overflow: hidden; border: 1.5px solid var(--glass-border);">
+                    <i class="bi bi-person-fill text-white fs-4"></i>
                 </div>
                 <div class="flex-grow-1">
-                    <div class="d-flex align-items-baseline gap-2">
+                    <div class="d-flex align-items-baseline gap-1 flex-wrap">
                         <a href="<?= site_url('profile/'.esc($user['username'])) ?>" class="text-decoration-none">
                             <h6 class="mb-0 fw-bold fs-6" style="color: var(--text-primary);"><?= esc($user['first_name'].' '.$user['last_name']) ?> 
                                 <?php if(!empty($user['is_verified'])): ?>
@@ -158,15 +158,15 @@
                 <?php if($is_own_profile): ?>
                 <div class="dropdown">
                     <i class="bi bi-three-dots text-muted fs-5" style="cursor:pointer;" data-bs-toggle="dropdown"></i>
-                    <ul class="dropdown-menu dropdown-menu-end glass-panel" style="background: var(--bg-color); border: 1px solid var(--glass-border); padding: 8px; min-width: 150px;">
+                    <ul class="dropdown-menu dropdown-menu-end glass-panel" style="background: var(--bg-color); border: 1px solid var(--glass-border); padding: 6px; min-width: 140px;">
                         <li>
-                            <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editModal<?= $postBody['id'] ?>" style="color: var(--text-primary); border-radius: 6px;">
+                            <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editModal<?= $postBody['id'] ?>" style="color: var(--text-primary); border-radius: 6px; padding: 6px 12px; font-size: 0.9rem;">
                                 <i class="bi bi-pencil-square me-2"></i> Edit
                             </a>
                         </li>
                         <li>
                             <form action="<?= site_url('posts/delete/'.$postBody['id']) ?>" method="POST" onsubmit="return confirm('Are you sure you want to delete this post?');" class="m-0 p-0">
-                                <button type="submit" class="dropdown-item text-danger" style="border-radius: 6px;">
+                                <button type="submit" class="dropdown-item text-danger" style="border-radius: 6px; padding: 6px 12px; font-size: 0.9rem;">
                                     <i class="bi bi-trash-fill me-2"></i> Delete
                                 </button>
                             </form>
@@ -201,22 +201,24 @@
 
             <!-- Post Body Text -->
             <?php if(!empty($postBody['content'])): ?>
-            <p class="mb-3 post-content" style="font-size: 1.05rem; line-height: 1.5; white-space: pre-wrap; color: var(--text-primary);"><?= esc($postBody['content']) ?></p>
+            <p class="mb-2 post-content" style="font-size: 1rem; line-height: 1.4; white-space: pre-wrap; color: var(--text-primary);"><?= esc($postBody['content']) ?></p>
             <?php endif; ?>
 
             <!-- Post Media -->
             <?php if(!empty($postBody['media_path'])): ?>
-                <?php if($postBody['media_type'] == 'image'): ?>
-                    <img src="<?= base_url(esc($postBody['media_path'])) ?>" class="media-attachment <?= !empty($postBody['content']) ? 'media-with-content' : 'media-only' ?>">
-                <?php elseif($postBody['media_type'] == 'video'): ?>
-                    <video controls class="media-attachment <?= !empty($postBody['content']) ? 'media-with-content' : 'media-only' ?>">
-                        <source src="<?= base_url(esc($postBody['media_path'])) ?>">
-                    </video>
-                <?php endif; ?>
+                <div>
+                    <?php if($postBody['media_type'] == 'image'): ?>
+                        <img src="<?= base_url(esc($postBody['media_path'])) ?>" class="media-attachment <?= !empty($postBody['content']) ? 'media-with-content' : 'media-only' ?>">
+                    <?php elseif($postBody['media_type'] == 'video'): ?>
+                        <video controls class="media-attachment <?= !empty($postBody['content']) ? 'media-with-content' : 'media-only' ?>">
+                            <source src="<?= base_url(esc($postBody['media_path'])) ?>">
+                        </video>
+                    <?php endif; ?>
+                </div>
             <?php endif; ?>
             
             <!-- Interaction Bar -->
-            <div class="interaction-bar d-flex gap-3 align-items-center mt-3">
+            <div class="interaction-bar d-flex gap-2 align-items-center mt-2">
                 <form action="<?= site_url('posts/toggleLike/'.$postBody['id']) ?>" method="POST" class="m-0">
                     <button type="submit" class="action-btn like-btn <?= $postBody['is_liked'] ? 'text-danger' : '' ?>">
                         <i class="bi <?= $postBody['is_liked'] ? 'bi-heart-fill' : 'bi-heart' ?>"></i>
@@ -254,18 +256,18 @@
                 }
                 
                 foreach($commentsToShow as $comment): ?>
-                <div class="comment-item">
-                    <img src="<?= base_url(esc($comment['user']['profile_pic'] ?? '')) ?>" class="rounded-circle profile-pic-img flex-shrink-0" width="36" height="36" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
-                    <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center profile-pic-placeholder flex-shrink-0" style="width: 36px; height: 36px; overflow: hidden; border: 1px solid var(--glass-border);">
+                <div class="comment-item" style="padding: 8px; gap: 8px; margin-bottom: 8px;">
+                    <img src="<?= base_url(esc($comment['user']['profile_pic'] ?? '')) ?>" class="rounded-circle profile-pic-img flex-shrink-0" width="32" height="32" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
+                    <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center profile-pic-placeholder flex-shrink-0" style="width: 32px; height: 32px; overflow: hidden; border: 1px solid var(--glass-border);">
                         <i class="bi bi-person-fill text-white fs-5"></i>
                     </div>
                     <div class="flex-grow-1">
-                        <div class="d-flex align-items-baseline gap-2 mb-1 flex-wrap">
+                        <div class="d-flex align-items-baseline gap-2 mb-0 flex-wrap">
                             <a href="<?= site_url('profile/'.esc($comment['user']['username'] ?? 'unknown')) ?>" class="text-decoration-none">
-                                <span class="fw-bold" style="color: var(--text-primary); font-size: 0.9rem;"><?= esc(($comment['user']['first_name'] ?? 'Unknown').' '.($comment['user']['last_name'] ?? 'User')) ?></span>
+                                <span class="fw-bold" style="color: var(--text-primary); font-size: 0.85rem;"><?= esc(($comment['user']['first_name'] ?? 'Unknown').' '.($comment['user']['last_name'] ?? 'User')) ?></span>
                             </a>
-                            <span class="text-muted" style="font-size: 0.8rem;">@<?= esc($comment['user']['username'] ?? 'unknown') ?></span>
-                            <span class="text-muted" style="font-size: 0.8rem;">• 
+                            <span class="text-muted" style="font-size: 0.75rem;">@<?= esc($comment['user']['username'] ?? 'unknown') ?></span>
+                            <span class="text-muted" style="font-size: 0.75rem;">• 
                                 <?php
                                     $diff = time() - strtotime($comment['created_at']);
                                     if($diff < 60) echo 'just now';
@@ -275,7 +277,7 @@
                                 ?>
                             </span>
                         </div>
-                        <p class="mb-0" style="font-size: 0.95rem; line-height: 1.5; color: var(--text-primary); white-space: pre-wrap;"><?= esc($comment['comment_text']) ?></p>
+                        <p class="mb-0" style="font-size: 0.9rem; line-height: 1.4; color: var(--text-primary); white-space: pre-wrap;"><?= esc($comment['comment_text']) ?></p>
                     </div>
                 </div>
                 <?php endforeach; ?>
@@ -293,7 +295,7 @@
                 }
                 
                 if ($showViewAll): ?>
-                <button class="action-btn comment-btn mt-2" data-bs-toggle="modal" data-bs-target="#commentModal<?= $postBody['id'] ?>">
+                <button class="action-btn comment-btn mt-1" data-bs-toggle="modal" data-bs-target="#commentModal<?= $postBody['id'] ?>" style="padding: 2px 8px; font-size: 0.8rem;">
                     View all <?= $postBody['comment_count'] ?> comments
                 </button>
                 <?php endif; ?>

@@ -19,11 +19,10 @@
         <div class="atmo-layout">
             <!-- Left Sidebar: Navbar -->
             <aside class="sidebar-left">
-                <div class="sidebar-header" style="padding: 20px; display: flex; align-items: center; gap: 12px;">
-                    <img src="<?= base_url('atmo_logo.png') ?>" alt="Atmo Logo" style="width: 48px; height: 48px; object-fit: contain;">
-                    <div>
-                        <h3 class="fw-bold mb-0">Atmo</h3>
-                        <p class="text-muted small mb-0">Own Your Atmosphere</p>
+                <div class="sidebar-header" style="padding: 12px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                    <img src="<?= base_url('atmo_logo.png') ?>" alt="Atmo Logo" style="width: 42px; height: 42px; object-fit: contain;">
+                    <div class="d-none d-lg-block">
+                        <h4 class="fw-bold mb-0" style="letter-spacing: -0.5px;">Atmo</h4>
                     </div>
                 </div>
 
@@ -44,7 +43,19 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-danger" href="<?= site_url('logout') ?>">
+                        <a class="nav-link" href="#">
+                            <i class="bi bi-compass"></i>
+                            <span class="nav-label">Explore</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="bi bi-bell"></i>
+                            <span class="nav-label">Notifications</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-danger mt-3" href="<?= site_url('logout') ?>">
                             <i class="bi bi-box-arrow-right"></i>
                             <span class="nav-label">Logout</span>
                         </a>
@@ -52,14 +63,14 @@
                 </ul>
 
                 <!-- Authenticated User Tag -->
-                <div style="margin-top: auto; padding: 20px; display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--glass-border);">
+                <div class="user-profile-tag mt-auto" style="padding: 12px; display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--glass-border); border-radius: 12px; transition: background 0.2s; cursor: pointer;">
                     <img src="<?= base_url(esc(session()->get('profile_pic') ?? '')) ?>" class="rounded-circle profile-pic-img" width="40" height="40" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
                     <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center profile-pic-placeholder" style="width: 40px; height: 40px; overflow: hidden; border: 1px solid var(--glass-border);">
                         <i class="bi bi-person-circle fs-3 text-white"></i>
                     </div>
-                    <div class="nav-label">
-                        <div class="fw-bold" style="font-size: 0.9rem;"><?= esc(session()->get('username')) ?></div>
-                        <div class="text-muted" style="font-size: 0.75rem;">@<?= esc(session()->get('username')) ?></div>
+                    <div class="nav-label overflow-hidden">
+                        <div class="fw-bold text-truncate" style="font-size: 0.9rem;"><?= esc(session()->get('username')) ?></div>
+                        <div class="text-muted text-truncate" style="font-size: 0.75rem;">@<?= esc(session()->get('username')) ?></div>
                     </div>
                 </div>
             </aside>
@@ -100,10 +111,10 @@
                 <?= $this->renderSection('content') ?>
             </main>
 
-            <!-- Right Sidebar (Backend Data Focus) -->
+            <!-- Right Sidebar -->
             <aside class="sidebar-right">
                 <!-- Search Widget -->
-                <div class="search-widget" style="position: relative;">
+                <div class="search-widget mb-4" style="position: relative;">
                     <div class="glass-panel search-input-container"
                         style="padding: 10px 16px; border-radius: 999px; display: flex; align-items: center; gap: 8px;">
                         <i class="bi bi-search text-muted"></i>
@@ -114,8 +125,48 @@
                     <div id="searchDropdown" class="search-dropdown glass-panel" style="display: none;"></div>
                 </div>
 
-                <div class="mt-4 px-3 text-muted" style="font-size: 0.85rem;">
-                    Powered by Atmo Backend Engine &copy; <?= date('Y') ?>
+                <!-- Trending Section -->
+                <div class="glass-panel mb-4" style="padding: 16px; border-radius: 16px;">
+                    <h5 class="fw-bold mb-3" style="font-size: 1.1rem;">What's Happening</h5>
+                    <div class="d-flex flex-column gap-3">
+                        <div class="trending-item">
+                            <small class="text-muted">Technology · Trending</small>
+                            <div class="fw-bold">#AtmoBeta</div>
+                            <small class="text-muted">1.2K Posts</small>
+                        </div>
+                        <div class="trending-item">
+                            <small class="text-muted">Atmosphere · Trending</small>
+                            <div class="fw-bold">Glassmorphism</div>
+                            <small class="text-muted">856 Posts</small>
+                        </div>
+                        <div class="trending-item">
+                            <small class="text-muted">Global · Trending</small>
+                            <div class="fw-bold">#PHP8.3</div>
+                            <small class="text-muted">2.4K Posts</small>
+                        </div>
+                    </div>
+                    <a href="#" class="d-block mt-3 text-decoration-none small" style="color: var(--accent-color);">Show more</a>
+                </div>
+
+                <!-- Suggested Users -->
+                <div class="glass-panel mb-4" style="padding: 16px; border-radius: 16px;" id="suggestedUsersSection">
+                    <h5 class="fw-bold mb-3" style="font-size: 1.1rem;">Who to follow</h5>
+                    <div id="suggestedUsersList" class="d-flex flex-column gap-3">
+                        <div class="text-center py-3">
+                            <div class="spinner-border spinner-border-sm text-muted" role="status"></div>
+                        </div>
+                    </div>
+                    <a href="#" class="d-block mt-3 text-decoration-none small" style="color: var(--accent-color);">Show more</a>
+                </div>
+
+                <div class="px-3 text-muted" style="font-size: 0.75rem;">
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                        <a href="#" class="text-muted text-decoration-none">Terms of Service</a>
+                        <a href="#" class="text-muted text-decoration-none">Privacy Policy</a>
+                        <a href="#" class="text-muted text-decoration-none">Cookie Policy</a>
+                        <a href="#" class="text-muted text-decoration-none">Accessibility</a>
+                    </div>
+                    Powered by Atmo Engine &copy; <?= date('Y') ?>
                 </div>
             </aside>
         </div>
