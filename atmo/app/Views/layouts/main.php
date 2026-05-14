@@ -135,21 +135,9 @@
                 <!-- Trending Section -->
                 <div class="glass-panel mb-4" style="padding: 16px; border-radius: 16px;">
                     <h5 class="fw-bold mb-3" style="font-size: 1.1rem;">What's Happening</h5>
-                    <div class="d-flex flex-column gap-3">
-                        <div class="trending-item">
-                            <small class="text-muted">Technology · Trending</small>
-                            <div class="fw-bold">#AtmoBeta</div>
-                            <small class="text-muted">1.2K Posts</small>
-                        </div>
-                        <div class="trending-item">
-                            <small class="text-muted">Atmosphere · Trending</small>
-                            <div class="fw-bold">Glassmorphism</div>
-                            <small class="text-muted">856 Posts</small>
-                        </div>
-                        <div class="trending-item">
-                            <small class="text-muted">Global · Trending</small>
-                            <div class="fw-bold">#PHP8.3</div>
-                            <small class="text-muted">2.4K Posts</small>
+                    <div id="trendingList" class="d-flex flex-column gap-3">
+                        <div class="text-center py-3">
+                            <div class="spinner-border spinner-border-sm text-muted" role="status"></div>
                         </div>
                     </div>
                     <a href="#" class="d-block mt-3 text-decoration-none small" style="color: var(--accent-color);">Show more</a>

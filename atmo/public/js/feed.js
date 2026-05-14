@@ -264,6 +264,37 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
+    // Trending Topics Logic
+    const trendingList = document.getElementById('trendingList');
+    if (trendingList) {
+        fetch('/api/posts/trending')
+            .then(response => response.json())
+            .then(topics => {
+                if (topics.length === 0) {
+                    trendingList.innerHTML = '<div class="text-muted small">No trending topics right now.</div>';
+                    return;
+                }
+
+                trendingList.innerHTML = topics.map(topic => {
+                    let postCountStr = topic.post_count;
+                    if (postCountStr >= 1000) {
+                        postCountStr = (postCountStr / 1000).toFixed(1) + 'K';
+                    }
+                    return `
+                        <div class="trending-item">
+                            <small class="text-muted">${topic.category} · Trending</small>
+                            <div class="fw-bold">${topic.topic}</div>
+                            <small class="text-muted">${postCountStr} Posts</small>
+                        </div>
+                    `;
+                }).join('');
+            })
+            .catch(error => {
+                console.error('Error fetching trending topics:', error);
+                trendingList.innerHTML = '<div class="text-muted small">Failed to load trending.</div>';
+            });
+    }
+
     // Close search dropdown when any modal opens
     document.addEventListener('show.bs.modal', function () {
         if (searchDropdown) {
