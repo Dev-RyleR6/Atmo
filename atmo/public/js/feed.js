@@ -1,3 +1,39 @@
+function showNotification(message) {
+    const notification = document.createElement('div');
+    notification.className = 'alert alert-success alert-dismissible fade show glass-panel';
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 280px;
+        max-width: 90vw;
+        border-radius: 12px;
+        background: rgba(25, 135, 84, 0.2);
+        border-color: rgba(25, 135, 84, 0.4);
+        color: white;
+        backdrop-filter: blur(10px);
+    `;
+    notification.innerHTML = `
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-check-circle-fill"></i>
+            <span>${message}</span>
+        </div>
+        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        const bsAlert = bootstrap.Alert.getOrCreateInstance(notification);
+        bsAlert.close();
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 500);
+    }, 3000);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const mediaInput = document.querySelector('input[name="media"]');
     const previewContainer = document.querySelector('.media-preview-container');
@@ -288,6 +324,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Update UI
                     repostBtn.classList.toggle('text-success', data.is_reposted);
                     repostBtn.querySelector('span').textContent = data.repost_count;
+                    
+                    // Show notification when reposted
+                    if (data.is_reposted) {
+                        showNotification('You reposted this!');
+                    }
                 }
             } catch (error) {
                 console.error('Error toggling repost:', error);

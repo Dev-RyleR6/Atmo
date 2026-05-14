@@ -57,6 +57,12 @@
                             <span class="nav-label">Profile</span>
                         </a>
                     </li>
+                    <li class="nav-item d-lg-none">
+                        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                            <i class="bi bi-box-arrow-right"></i>
+                            <span class="nav-label">Logout</span>
+                        </a>
+                    </li>
                 </ul>
 
                 <!-- Authenticated User Tag -->
@@ -69,7 +75,7 @@
                         <div class="fw-bold text-truncate" style="font-size: 1rem;"><?= esc(session()->get('username')) ?></div>
                         <div class="text-muted text-truncate" style="font-size: 0.85rem;">@<?= esc(session()->get('username')) ?></div>
                     </div>
-                    <a href="<?= site_url('logout') ?>" class="logout-btn d-none d-lg-block" title="Logout">
+                    <a href="#" class="logout-btn d-none d-lg-block" title="Logout" data-bs-toggle="modal" data-bs-target="#logoutModal">
                         <i class="bi bi-box-arrow-right"></i>
                     </a>
                 </div>
@@ -204,8 +210,43 @@
         </div>
     <?php endif; ?>
 
+    <!-- Logout Confirmation Modal -->
+    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-panel" style="border-radius: 16px; border: none; background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
+                <div class="modal-header" style="border-bottom: 1px solid var(--glass-border);">
+                    <h5 class="modal-title" id="logoutModalLabel">
+                        <i class="bi bi-box-arrow-right me-2"></i>
+                        Logout
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Are you sure you want to logout?</p>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid var(--glass-border);">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 12px;">Cancel</button>
+                    <a href="<?= site_url('logout') ?>" class="btn glass-btn" style="border-radius: 12px;">Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="<?= base_url('js/feed.js') ?>"></script>
+    
+    <!-- Auto-hide alerts -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach((alert, index) => {
+                setTimeout(() => {
+                    const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                    bsAlert.close();
+                }, 3000 + (index * 500));
+            });
+        });
+    </script>
 </body>
 
 </html>
