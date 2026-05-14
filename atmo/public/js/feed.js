@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const previewImg = document.querySelector('.media-preview');
     const removeMediaBtn = document.querySelector('.remove-media-btn');
     const composerInput = document.querySelector('.composer .glass-input');
+    const composerForm = document.querySelector('.composer form');
+    const feedContainer = document.querySelector('.mt-1');
     
     // Live Search
     const searchInput = document.getElementById('searchInput');
@@ -221,6 +223,105 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('show.bs.modal', function () {
         if (searchDropdown) {
             searchDropdown.style.display = 'none';
+        }
+    });
+
+    // Post Creation via AJAX
+    if (composerForm) {
+        composerForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(composerForm);
+            const submitBtn = composerForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/posts', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    // Reload the page to see the new post
+                    window.location.reload();
+                } else {
+                    alert('Failed to create post');
+                }
+            } catch (error) {
+                console.error('Error creating post:', error);
+                alert('Error creating post');
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+    }
+
+    // Toggle Like via AJAX
+    document.addEventListener('click', async function(e) {
+        const likeBtn = e.target.closest('.like-btn');
+        if (likeBtn) {
+            e.preventDefault();
+            const form = likeBtn.closest('form');
+            if (!form) return;
+
+            const actionUrl = form.getAttribute('action');
+            const postId = actionUrl.split('/').pop();
+
+            try {
+                const response = await fetch(`/api/posts/toggleLike/${postId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Update UI
+                    likeBtn.classList.toggle('text-danger', data.is_liked);
+                    likeBtn.querySelector('i').className = 
+                        `bi ${data.is_liked ? 'bi-heart-fill' : 'bi-heart'}`;
+                    likeBtn.querySelector('span').textContent = data.like_count;
+                }
+            } catch (error) {
+                console.error('Error toggling like:', error);
+            }
+        }
+    });
+
+    // Toggle Repost via AJAX
+    document.addEventListener('click', async function(e) {
+        const repostBtn = e.target.closest('.repost-btn');
+        if (repostBtn) {
+            e.preventDefault();
+            const form = repostBtn.closest('form');
+            if (!form) return;
+
+            const actionUrl = form.getAttribute('action');
+            const postId = actionUrl.split('/').pop();
+
+            try {
+                const response = await fetch(`/api/posts/toggleRepost/${postId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Update UI
+                    repostBtn.classList.toggle('text-success', data.is_reposted);
+                    repostBtn.querySelector('span').textContent = data.repost_count;
+                }
+            } catch (error) {
+                console.error('Error toggling repost:', error);
+            }
         }
     });
 });

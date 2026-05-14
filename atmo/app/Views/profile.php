@@ -498,6 +498,72 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
         }
     }
+
+    // Toggle Like via AJAX
+    document.addEventListener('click', async function(e) {
+        const likeBtn = e.target.closest('.like-btn');
+        if (likeBtn) {
+            e.preventDefault();
+            const form = likeBtn.closest('form');
+            if (!form) return;
+
+            const actionUrl = form.getAttribute('action');
+            const postId = actionUrl.split('/').pop();
+
+            try {
+                const response = await fetch(`/api/posts/toggleLike/${postId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Update UI
+                    likeBtn.classList.toggle('text-danger', data.is_liked);
+                    likeBtn.querySelector('i').className = 
+                        `bi ${data.is_liked ? 'bi-heart-fill' : 'bi-heart'}`;
+                    likeBtn.querySelector('span').textContent = data.like_count;
+                }
+            } catch (error) {
+                console.error('Error toggling like:', error);
+            }
+        }
+    });
+
+    // Toggle Repost via AJAX
+    document.addEventListener('click', async function(e) {
+        const repostBtn = e.target.closest('.repost-btn');
+        if (repostBtn) {
+            e.preventDefault();
+            const form = repostBtn.closest('form');
+            if (!form) return;
+
+            const actionUrl = form.getAttribute('action');
+            const postId = actionUrl.split('/').pop();
+
+            try {
+                const response = await fetch(`/api/posts/toggleRepost/${postId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Update UI
+                    repostBtn.classList.toggle('text-success', data.is_reposted);
+                    repostBtn.querySelector('span').textContent = data.repost_count;
+                }
+            } catch (error) {
+                console.error('Error toggling repost:', error);
+            }
+        }
+    });
 });
 </script>
 

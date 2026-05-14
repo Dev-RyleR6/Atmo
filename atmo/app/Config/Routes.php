@@ -47,4 +47,12 @@ $routes->group('api', function($routes) {
     $routes->get('users/(:segment)', 'Api\UserController::show/$1');
     $routes->get('users/followers/(:segment)', 'Api\UserController::followers/$1');
     $routes->get('users/following/(:segment)', 'Api\UserController::following/$1');
+    
+    // Post API Routes
+    $routes->get('posts', 'Api\PostController::index');
+    $routes->post('posts', 'Api\PostController::create');
+    $routes->get('posts/(:num)', 'Api\PostController::show/$1');
+    $routes->delete('posts/(:num)', 'Api\PostController::delete/$1');
+    $routes->post('posts/toggleLike/(:num)', 'Api\PostController::toggleLike/$1');
+    $routes->post('posts/toggleRepost/(:num)', 'Api\PostController::toggleRepost/$1');
 });

@@ -194,4 +194,52 @@ class PostController extends BaseController
 
         return $this->fail('Failed to delete post');
     }
+
+    public function toggleLike($postId)
+    {
+        $userId = session()->get('user_id');
+        $likeModel = new LikeModel();
+        
+        $existing = $likeModel->where('user_id', $userId)->where('post_id', $postId)->first();
+
+        if ($existing) {
+            $likeModel->where('user_id', $userId)->where('post_id', $postId)->delete();
+            $isLiked = false;
+        } else {
+            $likeModel->insert(['user_id' => $userId, 'post_id' => $postId]);
+            $isLiked = true;
+        }
+
+        $likeCount = $likeModel->where('post_id', $postId)->countAllResults();
+        
+        return $this->respond([
+            'status' => 'success',
+            'is_liked' => $isLiked,
+            'like_count' => $likeCount
+        ]);
+    }
+
+    public function toggleRepost($postId)
+    {
+        $userId = session()->get('user_id');
+        $repostModel = new RepostModel();
+        
+        $existing = $repostModel->where('user_id', $userId)->where('post_id', $postId)->first();
+
+        if ($existing) {
+            $repostModel->where('user_id', $userId)->where('post_id', $postId)->delete();
+            $isReposted = false;
+        } else {
+            $repostModel->insert(['user_id' => $userId, 'post_id' => $postId]);
+            $isReposted = true;
+        }
+
+        $repostCount = $repostModel->where('post_id', $postId)->countAllResults();
+        
+        return $this->respond([
+            'status' => 'success',
+            'is_reposted' => $isReposted,
+            'repost_count' => $repostCount
+        ]);
+    }
 }
