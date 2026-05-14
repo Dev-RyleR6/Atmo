@@ -11,6 +11,17 @@ document.addEventListener('DOMContentLoaded', function() {
     let searchTimeout;
 
     if (searchInput && searchDropdown) {
+        searchInput.addEventListener('focus', function() {
+            this.closest('.search-input-container').style.boxShadow = '0 0 0 2px var(--accent-color)';
+            if (this.value.trim().length > 0) {
+                searchDropdown.style.display = 'block';
+            }
+        });
+        
+        searchInput.addEventListener('blur', function() {
+            this.closest('.search-input-container').style.boxShadow = 'none';
+        });
+
         searchInput.addEventListener('input', function() {
             clearTimeout(searchTimeout);
             const query = this.value.trim();
