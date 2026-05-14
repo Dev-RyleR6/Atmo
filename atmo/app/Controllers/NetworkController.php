@@ -3,7 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\FollowModel;
-use App\Models\NotificationModel;
+use App\Services\NotificationService;
 
 class NetworkController extends BaseController
 {
@@ -23,13 +23,7 @@ class NetworkController extends BaseController
         } else {
             $followModel->skipValidation(true)->insert(['follower_id' => $followerId, 'followed_id' => $followedId]);
             
-            // Send notification
-            $notifModel = new NotificationModel();
-            $notifModel->skipValidation(true)->insert([
-                'recipient_id' => $followedId,
-                'sender_id' => $followerId,
-                'type' => 'follow'
-            ]);
+            NotificationService::notify($followedId, $followerId, 'follow');
 
             return redirect()->back()->with('success', 'Followed User');
         }

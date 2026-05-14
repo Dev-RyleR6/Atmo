@@ -883,6 +883,46 @@ body {
     display: none;
 }
 
+/* Notification Badge */
+.notification-link {
+    position: relative;
+}
+
+.notification-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #dc3545;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 99px;
+    min-width: 18px;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.notification-item {
+    transition: all 0.3s ease;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.notification-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* ------------------------------
+/* NOTIFICATION STYLES - SIMPLE
+------------------------------ */
+#notificationsList .notification-item.notification-unread {
+    opacity: 1;
+}
+
+#notificationsList .notification-item.notification-read {
+    opacity: 0.5;
+}
+
 /* Responsive Hide */
 @media (max-width: 1200px) {
     .sidebar-right {
@@ -977,4 +1017,15 @@ body {
     .action-btn {
         padding: 5px 8px;
     }
+}
+
+/* ------------------------------
+/* NOTIFICATION STYLES - SIMPLE
+------------------------------ */
+#notificationsList .notification-item.notification-unread {
+    opacity: 1;
+}
+
+#notificationsList .notification-item.notification-read {
+    opacity: 0.5;
 }

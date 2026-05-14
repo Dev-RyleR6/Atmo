@@ -58,4 +58,10 @@ $routes->group('api', function($routes) {
     $routes->post('posts/toggleLike/(:num)', 'Api\PostController::toggleLike/$1');
     $routes->post('posts/toggleRepost/(:num)', 'Api\PostController::toggleRepost/$1');
     $routes->post('posts/addComment/(:num)', 'Api\PostController::addComment/$1');
+    
+    // Notification API Routes
+    $routes->get('notifications', 'Api\NotificationController::index');
+    $routes->get('notifications/unreadCount', 'Api\NotificationController::unreadCount');
+    $routes->post('notifications/markAsRead', 'Api\NotificationController::markAsRead');
+    $routes->post('notifications/markAsRead/(:num)', 'Api\NotificationController::markAsRead/$1');
 });

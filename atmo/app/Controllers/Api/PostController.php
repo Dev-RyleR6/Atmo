@@ -7,6 +7,7 @@ use App\Models\PostModel;
 use App\Models\LikeModel;
 use App\Models\CommentModel;
 use App\Models\RepostModel;
+use App\Services\NotificationService;
 use CodeIgniter\API\ResponseTrait;
 
 class PostController extends BaseController
@@ -229,6 +230,7 @@ class PostController extends BaseController
     {
         $userId = session()->get('user_id');
         $likeModel = new LikeModel();
+        $postModel = new PostModel();
         
         $existing = $likeModel->where('user_id', $userId)->where('post_id', $postId)->first();
 
@@ -238,6 +240,11 @@ class PostController extends BaseController
         } else {
             $likeModel->insert(['user_id' => $userId, 'post_id' => $postId]);
             $isLiked = true;
+            
+            $post = $postModel->find($postId);
+            if ($post) {
+                NotificationService::notify($post['user_id'], $userId, 'like', $postId);
+            }
         }
 
         $likeCount = $likeModel->where('post_id', $postId)->countAllResults();
@@ -268,6 +275,8 @@ class PostController extends BaseController
         } else {
             $repostModel->insert(['user_id' => $userId, 'post_id' => $postId]);
             $isReposted = true;
+            
+            NotificationService::notify($originalPost['user_id'], $userId, 'repost', $postId);
         }
 
         $repostCount = $repostModel->where('post_id', $postId)->countAllResults();
@@ -311,6 +320,8 @@ class PostController extends BaseController
         }
 
         $commentCount = $commentModel->where('post_id', $postId)->countAllResults();
+        
+        NotificationService::notify($post['user_id'], $userId, 'comment', $postId);
 
         return $this->respond([
             'status' => 'success',

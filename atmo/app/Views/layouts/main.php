@@ -45,9 +45,10 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link notification-link" href="#" data-bs-toggle="modal" data-bs-target="#notificationsModal">
                             <i class="bi bi-bell"></i>
                             <span class="nav-label">Notifications</span>
+                            <span class="notification-badge d-none"></span>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -209,6 +210,37 @@
             <?= $this->renderSection('content') ?>
         </div>
     <?php endif; ?>
+
+    <!-- Notifications Modal -->
+    <div class="modal fade" id="notificationsModal" tabindex="-1" aria-labelledby="notificationsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content glass-panel" style="border-radius: 16px; border: none; background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
+                <div class="modal-header" style="border-bottom: 1px solid var(--glass-border);">
+                    <h5 class="modal-title" id="notificationsModalLabel">
+                        <i class="bi bi-bell me-2"></i>
+                        Notifications
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
+                    <div id="notificationsList">
+                        <div class="text-center py-4">
+                            <div class="spinner-border spinner-border-sm text-muted" role="status"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" id="notificationsPagination" style="border-top: 1px solid var(--glass-border); display: none;">
+                    <button type="button" class="btn btn-sm btn-secondary" id="prevPageBtn" disabled>
+                        <i class="bi bi-chevron-left"></i> Previous
+                    </button>
+                    <span class="text-muted" id="pageInfo" style="flex-grow: 1; text-align: center;"></span>
+                    <button type="button" class="btn btn-sm btn-secondary" id="nextPageBtn" disabled>
+                        Next <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Logout Confirmation Modal -->
     <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">

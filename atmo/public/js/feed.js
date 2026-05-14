@@ -528,4 +528,230 @@ document.addEventListener('DOMContentLoaded', function() {
         div.textContent = text;
         return div.innerHTML;
     }
+
+    // Notification functionality
+    const notificationBadge = document.querySelector('.notification-badge');
+    const notificationsModal = document.getElementById('notificationsModal');
+    const notificationsList = document.getElementById('notificationsList');
+    const notificationsPagination = document.getElementById('notificationsPagination');
+    const prevPageBtn = document.getElementById('prevPageBtn');
+    const nextPageBtn = document.getElementById('nextPageBtn');
+    const pageInfo = document.getElementById('pageInfo');
+    
+    let currentNotificationPage = 1;
+    let totalNotificationPages = 1;
+
+    async function loadUnreadCount() {
+        try {
+            const response = await fetch('/api/notifications/unreadCount');
+            if (response.ok) {
+                const data = await response.json();
+                if (notificationBadge) {
+                    if (data.count > 0) {
+                        notificationBadge.textContent = data.count > 99 ? '99+' : data.count;
+                        notificationBadge.classList.remove('d-none');
+                    } else {
+                        notificationBadge.classList.add('d-none');
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error loading unread count:', error);
+        }
+    }
+
+    async function loadNotifications(page = 1) {
+        try {
+            const response = await fetch(`/api/notifications?page=${page}`);
+            if (response.ok) {
+                const data = await response.json();
+                renderNotifications(data.notifications);
+                updatePagination(data.currentPage, data.totalPages, data.total);
+            }
+        } catch (error) {
+            console.error('Error loading notifications:', error);
+            if (notificationsList) {
+                notificationsList.innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-exclamation-triangle fs-2 mb-2 d-block opacity-25"></i>
+                        <p>Failed to load notifications.</p>
+                    </div>
+                `;
+            }
+        }
+    }
+    
+    function updatePagination(currentPage, totalPages, total) {
+        if (!notificationsPagination) return;
+        
+        currentNotificationPage = currentPage;
+        totalNotificationPages = totalPages;
+        
+        if (totalPages > 1) {
+            notificationsPagination.style.display = 'flex';
+        } else {
+            notificationsPagination.style.display = 'none';
+        }
+        
+        if (prevPageBtn) {
+            prevPageBtn.disabled = currentPage <= 1;
+        }
+        
+        if (nextPageBtn) {
+            nextPageBtn.disabled = currentPage >= totalPages;
+        }
+        
+        if (pageInfo) {
+            pageInfo.textContent = `Page ${currentPage} of ${totalPages} (${total} total)`;
+        }
+    }
+
+    function renderNotifications(notifications) {
+        if (!notificationsList) return;
+        
+        if (notifications.length === 0) {
+            notificationsList.innerHTML = `
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-inbox fs-2 mb-2 d-block opacity-25"></i>
+                    <p>No notifications yet.</p>
+                </div>
+            `;
+            return;
+        }
+
+        const html = notifications.map(notification => createNotificationHtml(notification)).join('');
+        notificationsList.innerHTML = html;
+    }
+
+    function createNotificationHtml(notification) {
+        const sender = notification.sender || {};
+        const profilePic = sender.profile_pic ? `/${sender.profile_pic}` : '';
+        const firstName = sender.first_name || 'Unknown';
+        const lastName = sender.last_name || 'User';
+        const username = sender.username || 'unknown';
+        
+        let message = '';
+        switch (notification.type) {
+            case 'like':
+                message = 'liked your post';
+                break;
+            case 'comment':
+                message = 'commented on your post';
+                break;
+            case 'follow':
+                message = 'started following you';
+                break;
+            case 'repost':
+                message = 'reposted your post';
+                break;
+            default:
+                message = 'interacted with you';
+        }
+
+        const now = new Date();
+        const createdDate = new Date(notification.created_at);
+        const diff = Math.floor((now - createdDate) / 1000);
+        let timeAgo = 'just now';
+        if (diff >= 60) {
+            timeAgo = Math.floor(diff / 60) + 'm';
+        }
+        if (diff >= 3600) {
+            timeAgo = Math.floor(diff / 3600) + 'h';
+        }
+        if (diff >= 86400) {
+            timeAgo = Math.floor(diff / 86400) + 'd';
+        }
+
+        // Normalize is_read (could be 0, 1, '0', '1', true, false)
+        const isReadValue = notification.is_read;
+        const isReadBool = isReadValue === 1 || isReadValue === '1' || isReadValue === true;
+        
+        const isReadClass = isReadBool ? 'notification-read' : 'notification-unread';
+
+        return `
+            <div class="notification-item ${isReadClass}" data-notification-id="${notification.id}" data-is-read="${isReadBool}" style="padding: 12px; border-bottom: 1px solid var(--glass-border); cursor: pointer;">
+                <div class="d-flex gap-3 align-items-start">
+                    <img src="${profilePic}" class="rounded-circle profile-pic-img flex-shrink-0" width="40" height="40" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
+                    <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center profile-pic-placeholder flex-shrink-0" style="width: 40px; height: 40px; overflow: hidden; border: 1px solid var(--glass-border);">
+                        <i class="bi bi-person-fill text-white fs-5"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-baseline gap-2 mb-1 flex-wrap">
+                            <a href="/profile/${username}" class="text-decoration-none" onclick="event.stopPropagation();">
+                                <span class="fw-bold" style="color: var(--text-primary);">${escapeHtml(firstName)} ${escapeHtml(lastName)}</span>
+                            </a>
+                            <span class="text-muted" style="font-size: 0.85rem;">@${escapeHtml(username)}</span>
+                            <span class="text-muted" style="font-size: 0.8rem;">• ${timeAgo}</span>
+                        </div>
+                        <p class="mb-0" style="font-size: 0.95rem; line-height: 1.4; color: var(--text-primary);">${escapeHtml(message)}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    async function markNotificationAsRead(notificationId) {
+        try {
+            await fetch(`/api/notifications/markAsRead/${notificationId}`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            loadUnreadCount();
+        } catch (error) {
+            console.error('Error marking notification as read:', error);
+        }
+    }
+
+    // Load unread count on page load
+    loadUnreadCount();
+
+    // Load notifications when modal opens
+    if (notificationsModal) {
+        notificationsModal.addEventListener('show.bs.modal', function() {
+            currentNotificationPage = 1;
+            loadNotifications(1);
+        });
+    }
+
+    // Handle notification clicks
+    if (notificationsList) {
+        notificationsList.addEventListener('click', function(e) {
+            const notificationItem = e.target.closest('.notification-item');
+            if (notificationItem) {
+                const notificationId = notificationItem.dataset.notificationId;
+                const isRead = notificationItem.dataset.isRead === '1' || notificationItem.dataset.isRead === 'true';
+                if (notificationId && !isRead) {
+                    // Update classes
+                    notificationItem.classList.remove('notification-unread');
+                    notificationItem.classList.add('notification-read');
+                    // Update data attribute
+                    notificationItem.dataset.isRead = '1';
+                    // Mark as read in backend
+                    markNotificationAsRead(notificationId);
+                }
+            }
+        });
+    }
+
+    // Pagination buttons
+    if (prevPageBtn) {
+        prevPageBtn.addEventListener('click', function() {
+            if (currentNotificationPage > 1) {
+                loadNotifications(currentNotificationPage - 1);
+            }
+        });
+    }
+
+    if (nextPageBtn) {
+        nextPageBtn.addEventListener('click', function() {
+            if (currentNotificationPage < totalNotificationPages) {
+                loadNotifications(currentNotificationPage + 1);
+            }
+        });
+    }
+
+    // Poll for new notifications every 30 seconds
+    setInterval(loadUnreadCount, 30000);
 });

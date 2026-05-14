@@ -7,6 +7,7 @@ use App\Models\RepostModel;
 use App\Models\UserModel;
 use App\Models\LikeModel;
 use App\Models\CommentModel;
+use App\Services\NotificationService;
 
 class PostController extends BaseController
 {
@@ -175,6 +176,7 @@ class PostController extends BaseController
     {
         $userId = session()->get('user_id');
         $likeModel = new LikeModel();
+        $postModel = new PostModel();
         
         $existing = $likeModel->where('user_id', $userId)->where('post_id', $postId)->first();
 
@@ -182,6 +184,11 @@ class PostController extends BaseController
             $likeModel->where('user_id', $userId)->where('post_id', $postId)->delete();
         } else {
             $likeModel->insert(['user_id' => $userId, 'post_id' => $postId]);
+            
+            $post = $postModel->find($postId);
+            if ($post) {
+                NotificationService::notify($post['user_id'], $userId, 'like', $postId);
+            }
         }
         
         return redirect()->back();
@@ -191,6 +198,7 @@ class PostController extends BaseController
     {
         $userId = session()->get('user_id');
         $text = $this->request->getPost('comment_text');
+        $postModel = new PostModel();
 
         if (!empty($text)) {
             $commentModel = new CommentModel();
@@ -199,6 +207,11 @@ class PostController extends BaseController
                 'user_id' => $userId,
                 'comment_text' => $text
             ]);
+            
+            $post = $postModel->find($postId);
+            if ($post) {
+                NotificationService::notify($post['user_id'], $userId, 'comment', $postId);
+            }
         }
         
         return redirect()->back();
@@ -221,6 +234,8 @@ class PostController extends BaseController
             $repostModel->where('user_id', $userId)->where('post_id', $postId)->delete();
         } else {
             $repostModel->insert(['user_id' => $userId, 'post_id' => $postId]);
+            
+            NotificationService::notify($originalPost['user_id'], $userId, 'repost', $postId);
         }
         
         return redirect()->back();
