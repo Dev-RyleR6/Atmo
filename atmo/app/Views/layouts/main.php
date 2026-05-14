@@ -19,10 +19,13 @@
         <div class="atmo-layout">
             <!-- Left Sidebar: Navbar -->
             <aside class="sidebar-left">
-                <div class="sidebar-header" style="padding: 8px 12px; display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                    <img src="<?= base_url('atmo_logo.png') ?>" alt="Atmo Logo" style="width: 44px; height: 44px; object-fit: contain;">
-                    <div class="d-none d-lg-block">
-                        <h4 class="fw-bold mb-0" style="letter-spacing: -0.8px; font-size: 1.5rem;">Atmo</h4>
+                <div class="sidebar-header">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <img src="<?= base_url('atmo_logo.png') ?>" alt="Atmo Logo" class="sidebar-logo">
+                        <div class="sidebar-title-container">
+                            <h4 class="sidebar-title mb-0">Atmo</h4>
+                            <p class="sidebar-tagline mb-0">Create and own your atmosphere</p>
+                        </div>
                     </div>
                 </div>
 
@@ -48,25 +51,25 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link <?= current_url() == site_url('profile') ? 'active' : '' ?>"
+                        <a class="nav-link <?= (current_url() == site_url('profile') || str_contains(current_url(), site_url('profile/'))) ? 'active' : '' ?>"
                             href="<?= site_url('profile') ?>">
-                            <i class="bi <?= current_url() == site_url('profile') ? 'bi-person-fill' : 'bi-person' ?>"></i>
+                            <i class="bi <?= (current_url() == site_url('profile') || str_contains(current_url(), site_url('profile/'))) ? 'bi-person-fill' : 'bi-person' ?>"></i>
                             <span class="nav-label">Profile</span>
                         </a>
                     </li>
                 </ul>
 
                 <!-- Authenticated User Tag -->
-                <div class="user-profile-tag mt-auto mb-2" style="padding: 12px; display: flex; align-items: center; gap: 12px; border-radius: 99px; transition: all 0.2s; cursor: pointer;">
+                <div class="user-profile-tag">
                     <img src="<?= base_url(esc(session()->get('profile_pic') ?? '')) ?>" class="rounded-circle profile-pic-img shadow-sm" width="40" height="40" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
                     <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center profile-pic-placeholder shadow-sm" style="width: 40px; height: 40px; overflow: hidden; border: 1px solid var(--glass-border);">
                         <i class="bi bi-person-circle fs-3 text-white"></i>
                     </div>
                     <div class="nav-label overflow-hidden flex-grow-1">
-                        <div class="fw-bold text-truncate" style="font-size: 0.95rem;"><?= esc(session()->get('username')) ?></div>
-                        <div class="text-muted text-truncate" style="font-size: 0.8rem;">@<?= esc(session()->get('username')) ?></div>
+                        <div class="fw-bold text-truncate" style="font-size: 1rem;"><?= esc(session()->get('username')) ?></div>
+                        <div class="text-muted text-truncate" style="font-size: 0.85rem;">@<?= esc(session()->get('username')) ?></div>
                     </div>
-                    <a href="<?= site_url('logout') ?>" class="text-danger fs-5 ms-auto d-none d-lg-block" title="Logout">
+                    <a href="<?= site_url('logout') ?>" class="logout-btn d-none d-lg-block" title="Logout">
                         <i class="bi bi-box-arrow-right"></i>
                     </a>
                 </div>
