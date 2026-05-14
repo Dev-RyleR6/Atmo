@@ -10,7 +10,7 @@ use App\Models\CommentModel;
 
 class PostController extends BaseController
 {
-    public function index()
+    private function getFeed($feedType = 'for_you')
     {
         $userId = session()->get('user_id');
         $db = \Config\Database::connect();
@@ -30,30 +30,42 @@ class PostController extends BaseController
         $repostModel = new RepostModel();
         
         // Fetch original posts
-        if (count($followingIds) > 1) {
+        if ($feedType === 'your_atmosphere') {
+            // Your Atmosphere: only posts from followed users (including self)
             $posts = $postModel->whereIn('user_id', $followingIds)
                                ->where('visibility !=', 'private')
                                ->orderBy('created_at', 'DESC')
                                ->limit(50)
                                ->findAll();
-        } else {
-            $posts = $postModel->where('visibility', 'public')
-                               ->orderBy('created_at', 'DESC')
-                               ->limit(50)
-                               ->findAll();
-        }
-                           
-        // Fetch Reposts and merge
-        if (count($followingIds) > 1) {
+                               
             $reposts = $repostModel->whereIn('user_id', $followingIds)
                                    ->orderBy('created_at', 'DESC')
                                    ->limit(50)
                                    ->findAll();
         } else {
-            $reposts = $repostModel->where('user_id', $userId)
+            // For You: all public posts (or from followed if you have any)
+            if (count($followingIds) > 1) {
+                $posts = $postModel->whereIn('user_id', $followingIds)
+                                   ->where('visibility !=', 'private')
                                    ->orderBy('created_at', 'DESC')
                                    ->limit(50)
                                    ->findAll();
+                                   
+                $reposts = $repostModel->whereIn('user_id', $followingIds)
+                                       ->orderBy('created_at', 'DESC')
+                                       ->limit(50)
+                                       ->findAll();
+            } else {
+                $posts = $postModel->where('visibility', 'public')
+                                   ->orderBy('created_at', 'DESC')
+                                   ->limit(50)
+                                   ->findAll();
+                                   
+                $reposts = $repostModel->where('user_id', $userId)
+                                       ->orderBy('created_at', 'DESC')
+                                       ->limit(50)
+                                       ->findAll();
+            }
         }
 
         $userModel = new UserModel();
@@ -138,9 +150,25 @@ class PostController extends BaseController
             return strtotime($b['created_at']) - strtotime($a['created_at']);
         });
         
-        $feed = array_slice($feed, 0, 50);
+        return array_slice($feed, 0, 50);
+    }
 
-        return view('feed', ['posts' => $feed]);
+    public function index()
+    {
+        $feedType = session()->get('current_feed_type') ?? 'for_you';
+        
+        // Check if feed type is passed via query parameter
+        if ($this->request->getGet('feed')) {
+            $feedType = $this->request->getGet('feed');
+            session()->set('current_feed_type', $feedType);
+        }
+        
+        return view('feed', ['posts' => $this->getFeed($feedType), 'current_feed_type' => $feedType]);
+    }
+    
+    public function feed($feedType = 'for_you')
+    {
+        return $this->respond($this->getFeed($feedType));
     }
     
     public function toggleLike($postId)

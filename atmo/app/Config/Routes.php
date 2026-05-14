@@ -17,6 +17,7 @@ $routes->get('logout', 'AuthController::logoutAction');
 // Protected Routes (require auth web filter)
 $routes->group('', ['filter' => 'auth_web'], function($routes) {
     $routes->get('feed', 'PostController::index');
+    $routes->get('feed/(:segment)', 'PostController::feed/$1');
     $routes->post('posts/create', 'PostController::create');
     $routes->post('posts/edit/(:num)', 'PostController::edit/$1');
     $routes->post('posts/delete/(:num)', 'PostController::delete/$1');
@@ -50,6 +51,7 @@ $routes->group('api', function($routes) {
     
     // Post API Routes
     $routes->get('posts', 'Api\PostController::index');
+    $routes->get('posts/(:segment)', 'Api\PostController::index/$1');
     $routes->post('posts', 'Api\PostController::create');
     $routes->get('posts/(:num)', 'Api\PostController::show/$1');
     $routes->delete('posts/(:num)', 'Api\PostController::delete/$1');

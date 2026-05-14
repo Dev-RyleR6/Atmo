@@ -13,14 +13,10 @@ class PostController extends BaseController
 {
     use ResponseTrait;
 
-    public function index()
+    public function index($feedType = 'for_you')
     {
         $userId = session()->get('user_id');
         $db = \Config\Database::connect();
-        
-        // Fetch posts from users I follow + my own posts
-        // This includes original posts and reposts via a UNION or combined query
-        // For simplicity and high performance, we use a subquery for followed IDs
         
         $followingIdsQuery = $db->table('follows')
                                ->select('followed_id')
@@ -61,17 +57,43 @@ class PostController extends BaseController
         };
         
         // Fetch original posts
-        $posts = $postModel->whereIn('user_id', $followingIds)
-                           ->where('visibility !=', 'private')
-                           ->orderBy('created_at', 'DESC')
-                           ->limit(50)
-                           ->findAll();
-                           
-        // Fetch Reposts and merge
-        $reposts = $repostModel->whereIn('user_id', $followingIds)
+        if ($feedType === 'your_atmosphere') {
+            // Your Atmosphere: only posts from followed users (including self)
+            $posts = $postModel->whereIn('user_id', $followingIds)
+                               ->where('visibility !=', 'private')
                                ->orderBy('created_at', 'DESC')
                                ->limit(50)
                                ->findAll();
+                               
+            $reposts = $repostModel->whereIn('user_id', $followingIds)
+                                   ->orderBy('created_at', 'DESC')
+                                   ->limit(50)
+                                   ->findAll();
+        } else {
+            // For You: all public posts (or from followed if you have any)
+            if (count($followingIds) > 1) {
+                $posts = $postModel->whereIn('user_id', $followingIds)
+                                   ->where('visibility !=', 'private')
+                                   ->orderBy('created_at', 'DESC')
+                                   ->limit(50)
+                                   ->findAll();
+                                   
+                $reposts = $repostModel->whereIn('user_id', $followingIds)
+                                       ->orderBy('created_at', 'DESC')
+                                       ->limit(50)
+                                       ->findAll();
+            } else {
+                $posts = $postModel->where('visibility', 'public')
+                                   ->orderBy('created_at', 'DESC')
+                                   ->limit(50)
+                                   ->findAll();
+                                   
+                $reposts = $repostModel->where('user_id', $userId)
+                                       ->orderBy('created_at', 'DESC')
+                                       ->limit(50)
+                                       ->findAll();
+            }
+        }
 
         $userModel = new \App\Models\UserModel();
         

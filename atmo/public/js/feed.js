@@ -42,6 +42,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const composerInput = document.querySelector('.composer .glass-input');
     const composerForm = document.querySelector('.composer form');
     const feedContainer = document.querySelector('.mt-1');
+    const feedTabs = document.querySelectorAll('.feed-tab');
+    
+    let currentFeedType = 'for_you';
+    
+    // Set current feed type from active tab
+    const activeTab = document.querySelector('.feed-tab.active');
+    if (activeTab && activeTab.dataset.feedType) {
+        currentFeedType = activeTab.dataset.feedType;
+    }
     
     // Live Search
     const searchInput = document.getElementById('searchInput');
@@ -86,7 +95,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                          class="search-result-avatar profile-pic-img"
                                          onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
                                     <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center search-result-avatar" style="border: 1px solid var(--glass-border);">
-                                        <i class="bi bi-person-fill text-white"></i>
+                                        <i class="bi bi-person-fill text-white fs-5"></i>
                                     </div>
                                     <div class="search-result-info">
                                         <div class="search-result-name">${user.first_name} ${user.last_name}</div>
@@ -234,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                  class="suggested-user-avatar profile-pic-img"
                                  onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
                             <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center suggested-user-avatar" style="border: 1px solid var(--glass-border);">
-                                <i class="bi bi-person-fill text-white"></i>
+                                <i class="bi bi-person-fill text-white fs-5"></i>
                             </div>
                         </a>
                         <div class="suggested-user-info">
@@ -262,8 +271,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Let the form submit normally to the regular endpoint (it's already working!)
-    // We'll remove the AJAX override for now to avoid issues
+    // Feed Tab Switching
+    if (feedTabs) {
+        feedTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const feedType = this.dataset.feedType;
+                if (!feedType) return;
+                
+                if (feedType === currentFeedType) return;
+
+                // Update active tab
+                feedTabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                // Reload the page with the selected feed
+                window.location.href = `/feed?feed=${feedType}`;
+            });
+        });
+    }
 
     // Toggle Like via AJAX
     document.addEventListener('click', async function(e) {
