@@ -26,10 +26,10 @@ class UserController extends BaseController
 
         // Fetch user's posts
         $postModel = new PostModel();
-        $posts = $postModel->where('user_id', $user['id'])
-                           ->orderBy('created_at', 'DESC')
-                           ->findAll();
-        
+        $postsQuery = $postModel->where('user_id', $user['id'])
+                   ->orderBy('created_at', 'DESC')
+                   ->findAll();
+        $posts = is_array($postsQuery) ? $postsQuery : [];
         $user['posts'] = $posts;
 
         return $this->respond($user);
@@ -69,8 +69,9 @@ class UserController extends BaseController
         }
         
         // Get followers
-        $followers = $followModel->where('followed_id', $user['id'])->findAll();
-        $followerIds = array_column($followers, 'follower_id');
+        $followersQuery = $followModel->where('followed_id', $user['id'])->findAll();
+        $followers = is_array($followersQuery) ? $followersQuery : [];
+        $followerIds = !empty($followers) ? array_column($followers, 'follower_id') : [];
         
         $followerUsers = [];
         if (!empty($followerIds)) {
@@ -98,8 +99,9 @@ class UserController extends BaseController
         }
         
         // Get following
-        $following = $followModel->where('follower_id', $user['id'])->findAll();
-        $followingIds = array_column($following, 'followed_id');
+        $followingQuery = $followModel->where('follower_id', $user['id'])->findAll();
+        $following = is_array($followingQuery) ? $followingQuery : [];
+        $followingIds = !empty($following) ? array_column($following, 'followed_id') : [];
         
         $followingUsers = [];
         if (!empty($followingIds)) {

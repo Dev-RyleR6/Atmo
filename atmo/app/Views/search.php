@@ -16,10 +16,10 @@
     </div>
 <?php else: ?>
     <div class="d-flex flex-column gap-3">
-        <?php foreach($users as $u): ?>
+        <?php foreach(is_array($users) ? $users : [] as $u): ?>
             <div class="glass-panel d-flex justify-content-between align-items-center" style="padding: 16px 20px;">
                 <div class="d-flex align-items-center">
-                    <img src="<?= base_url(esc($u['profile_pic'] ?? 'default_user.png')) ?>" class="rounded-circle me-3 border border-secondary" width="56" height="56" onerror="this.src='https://via.placeholder.com/56';">
+                    <img src="<?= base_url(esc($u['profile_pic'] ?? 'vecteezy_user-solid-icon_22808249.svg')) ?>" class="rounded-circle me-3 border border-secondary" width="56" height="56" onerror="this.src='https://via.placeholder.com/56';">
                     <div>
                         <h6 class="mb-1 fw-bold" style="color: var(--text-primary);"><?= esc($u['first_name'].' '.$u['last_name']) ?></h6>
                         <small class="text-muted">@<?= esc($u['username']) ?></small>
@@ -29,9 +29,9 @@
                     </div>
                 </div>
                 
-                <form action="<?= site_url('users/toggleFollow/'.$u['id']) ?>" method="POST">
-                    <?php if($u['id'] != session()->get('user_id')): ?>
-                        <button type="submit" class="glass-btn btn-sm" style="background: var(--text-primary); color: var(--bg-color);">Follow / Unfollow</button>
+                <form class="follow-toggle-form" action="<?= site_url('users/toggleFollow/'.($u['id'] ?? '')) ?>" method="POST" data-user-id="<?= $u['id'] ?? '' ?>">
+                    <?php if(($u['id'] ?? null) != session()->get('user_id')): ?>
+                        <button type="submit" class="glass-btn btn-sm follow-toggle-btn" style="background: var(--text-primary); color: var(--bg-color);">Follow / Unfollow</button>
                     <?php endif; ?>
                 </form>
             </div>

@@ -55,7 +55,13 @@
 
 <!-- Feed List -->
 <div class="mt-1">
-    <?php if(empty($posts)): ?>
+    <?php 
+        // Defensive initializations: ensure these exist for new/empty users
+        $posts = is_array($posts) ? $posts : [];
+        $reposts = isset($reposts) ? (is_array($reposts) ? $reposts : []) : [];
+        $allPostBodies = [];
+    ?>
+    <?php if(empty($posts) && empty($reposts)): ?>
     <div class="glass-panel text-center text-muted py-4 mt-2">
             <i class="bi bi-wind fs-2 mb-2 d-block opacity-25"></i>
             <p>No posts to show yet. <br>Start following users to fill your atmosphere!</p>
@@ -64,10 +70,19 @@
         <?php 
             // Collect all post bodies for modals
             $allPostBodies = [];
+            // Ensure posts is an array
+            $posts = is_array($posts) ? $posts : [];
         ?>
-        <?php foreach($posts as $post): ?>
+        <?php foreach(is_array($posts) ? $posts : [] as $post): ?>
+            <?php 
+                // Skip if post is not an array or missing required data
+                if (!is_array($post)) continue;
+                
+                // Initialize safety variables
+                $isRepost = isset($post['type']) && $post['type'] == 'repost';
+            ?>
+            
             <!-- Repost Context -->
-            <?php $isRepost = ($post['type'] == 'repost'); ?>
             <?php if($isRepost): ?>
                 <?php 
                     // Skip if original post or user data is missing
@@ -94,28 +109,28 @@
                         <i class="bi bi-arrow-repeat text-muted"></i>
                         <span class="text-muted small fw-medium">
                             <?php 
-                                $isOwnRepost = session()->get('user_id') == ($post['reposted_by']['id'] ?? null);
-                                echo $isOwnRepost ? 'You' : esc($post['reposted_by']['first_name'] ?? $post['reposted_by']['username'] ?? 'Someone');
+                                $isOwnRepost = session()->get('user_id') == (isset($post['reposted_by']['id']) ? $post['reposted_by']['id'] : null);
+                                echo $isOwnRepost ? 'You' : esc(isset($post['reposted_by']['first_name']) ? $post['reposted_by']['first_name'] : (isset($post['reposted_by']['username']) ? $post['reposted_by']['username'] : 'Someone'));
                             ?> reposted
                         </span>
                     </div>
                 <?php endif; ?>
                 <!-- Post Header -->
                 <div class="d-flex align-items-start mb-2">
-                    <img src="<?= base_url(esc($postBody['user']['profile_pic'] ?? '')) ?>" class="rounded-circle me-2 profile-pic-img" width="40" height="40" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
+                    <img src="<?= base_url(esc(isset($postBody['user']['profile_pic']) ? $postBody['user']['profile_pic'] : '')) ?>" class="rounded-circle me-2 profile-pic-img" width="40" height="40" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
                     <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center me-2 profile-pic-placeholder" style="width: 40px; height: 40px; overflow: hidden; flex-shrink: 0; border: 1.5px solid var(--glass-border);">
                         <i class="bi bi-person-fill text-white fs-4"></i>
                     </div>
                     <div class="flex-grow-1">
                         <div class="d-flex align-items-baseline gap-1 flex-wrap">
-                            <a href="<?= site_url('profile/'.esc($postBody['user']['username'] ?? 'unknown')) ?>" class="text-decoration-none">
-                                <h6 class="mb-0 fw-bold fs-6" style="color: var(--text-primary);"><?= esc(($postBody['user']['first_name'] ?? 'Unknown').' '.($postBody['user']['last_name'] ?? 'User')) ?> 
+                            <a href="<?= site_url('profile/'.esc(isset($postBody['user']['username']) ? $postBody['user']['username'] : 'unknown')) ?>" class="text-decoration-none">
+                                <h6 class="mb-0 fw-bold fs-6" style="color: var(--text-primary);"><?= esc((isset($postBody['user']['first_name']) ? $postBody['user']['first_name'] : 'Unknown').' '.(isset($postBody['user']['last_name']) ? $postBody['user']['last_name'] : 'User')) ?> 
                                     <?php if(!empty($postBody['user']['is_verified'])): ?>
                                         <i class="bi bi-patch-check-fill text-primary small"></i>
                                     <?php endif; ?>
                                 </h6>
                             </a>
-                            <span class="text-muted small">@<?= esc($postBody['user']['username'] ?? 'unknown') ?> • 
+                            <span class="text-muted small">@<?= esc(isset($postBody['user']['username']) ? $postBody['user']['username'] : 'unknown') ?> • 
                                 <span title="<?= date('M j, Y g:i A', strtotime($postBody['created_at'])) ?>">
                                     <?php
                                         $diff = time() - strtotime($postBody['created_at']);
@@ -212,7 +227,7 @@
                         $commentsToShow = $postBody['comments'];
                     }
                     
-                    foreach($commentsToShow as $comment): ?>
+                    foreach(is_array($commentsToShow) ? $commentsToShow : [] as $comment): ?>
                     <div class="comment-item" data-user-id="<?= $comment['user_id'] ?>" style="padding: 8px; gap: 8px; margin-bottom: 8px;">
                         <img src="<?= base_url(esc($comment['user']['profile_pic'] ?? '')) ?>" class="rounded-circle profile-pic-img flex-shrink-0" width="32" height="32" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
                         <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center profile-pic-placeholder flex-shrink-0" style="width: 32px; height: 32px; overflow: hidden; border: 1px solid var(--glass-border);">
@@ -265,7 +280,7 @@
 </div>
 
 <!-- Modals (outside post loop to avoid stacking issues) -->
-<?php foreach($allPostBodies as $postBody): ?>
+<?php foreach(is_array($allPostBodies) ? $allPostBodies : [] as $postBody): ?>
     <!-- Edit Modal -->
     <?php if ($postBody['user_id'] == session()->get('user_id')): ?>
     <div class="modal fade" id="editModal<?= $postBody['id'] ?>" tabindex="-1" aria-hidden="true">
@@ -300,8 +315,8 @@
                 <div class="modal-body">
                     <?php if(!empty($postBody['comments'])): ?>
                     <div class="comments-list mb-3" style="max-height: 300px; overflow-y: auto;">
-                        <?php foreach($postBody['comments'] as $comment): ?>
-                        <div class="comment-item" data-user-id="<?= $comment['user_id'] ?>">
+                        <?php foreach(is_array($postBody['comments']) ? $postBody['comments'] : [] as $comment): ?>
+                        <div class="comment-item" data-user-id="<?= $comment['user_id'] ?>" data-comment-id="<?= $comment['id'] ?>" style="position: relative; transition: all 0.2s ease;">
                             <img src="<?= base_url(esc($comment['user']['profile_pic'] ?? '')) ?>" class="rounded-circle profile-pic-img flex-shrink-0" width="40" height="40" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
                             <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center profile-pic-placeholder flex-shrink-0" style="width: 40px; height: 40px; overflow: hidden; border: 1px solid var(--glass-border);">
                                 <i class="bi bi-person-fill text-white fs-5"></i>
@@ -322,7 +337,19 @@
                                         ?>
                                     </span>
                                 </div>
-                                <p class="mb-0" style="font-size: 1rem; line-height: 1.5; color: var(--text-primary); white-space: pre-wrap;"><?= esc($comment['comment_text']) ?></p>
+                                <div style="position: relative; display: flex; align-items: flex-start; gap: 8px;">
+                                    <p class="mb-0 comment-text" style="font-size: 1rem; line-height: 1.5; color: var(--text-primary); white-space: pre-wrap; flex: 1;"><?= esc($comment['comment_text']) ?></p>
+                                    <?php if($comment['user_id'] == session()->get('user_id')): ?>
+                                    <div class="comment-actions" style="display: flex; gap: 6px; opacity: 0; transition: opacity 0.2s ease; flex-shrink: 0;">
+                                        <button type="button" class="comment-edit-btn" data-comment-id="<?= $comment['id'] ?>" data-comment-text="<?= esc($comment['comment_text']) ?>" title="Edit comment" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 0.9rem; padding: 4px 8px; border-radius: 4px; transition: all 0.2s ease;">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </button>
+                                        <button type="button" class="comment-delete-btn" data-comment-id="<?= $comment['id'] ?>" title="Delete comment" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 0.9rem; padding: 4px 8px; border-radius: 4px; transition: all 0.2s ease;">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         </div>
                         <?php endforeach; ?>

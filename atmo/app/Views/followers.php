@@ -4,12 +4,12 @@
 
 <!-- Header -->
 <div class="mb-3 d-flex gap-3 fw-bold" style="padding: 0 10px;">
-    <a href="<?= site_url('profile/'.$user['username']) ?>" class="text-muted text-decoration-none">
+    <a href="<?= site_url('profile/'.(isset($user['username']) ? $user['username'] : '')) ?>" class="text-muted text-decoration-none">
         <i class="bi bi-arrow-left me-2"></i>
     </a>
     <div class="d-flex align-items-center gap-2">
         <i class="bi <?= $title === 'Followers' ? 'bi-people' : 'bi-person-check' ?>" style="font-size: 1.2rem; color: var(--accent-color);"></i>
-        <span class="text-white pb-2" style="border-bottom: 2px solid var(--accent-color); cursor:pointer;"><?= esc($user['first_name'].' '.$user['last_name']) ?>'s <?= esc($title) ?></span>
+        <span class="text-white pb-2" style="border-bottom: 2px solid var(--accent-color); cursor:pointer;"><?= esc(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '')) ?>'s <?= esc($title) ?></span>
     </div>
 </div>
 
@@ -26,7 +26,7 @@
     </div>
 <?php else: ?>
     <div class="d-flex flex-column gap-3">
-        <?php foreach($users as $u): ?>
+        <?php foreach(is_array($users) ? $users : [] as $u): ?>
             <div class="glass-panel d-flex justify-content-between align-items-center" style="padding: 16px 20px;">
                 <div class="d-flex align-items-center">
                     <img src="<?= base_url(esc($u['profile_pic'] ?? '')) ?>" class="rounded-circle me-3 profile-pic-img" width="56" height="56" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
@@ -46,10 +46,10 @@
                     </div>
                 </div>
                 
-                <?php if($u['id'] != session()->get('user_id')): ?>
-                <form action="<?= site_url('users/toggleFollow/'.$u['id']) ?>" method="POST">
-                    <button type="submit" class="glass-btn btn-sm" style="<?= $u['is_following'] ? 'background: transparent; border: 1px solid var(--glass-border); color: var(--text-primary);' : '' ?>">
-                        <?= $u['is_following'] ? 'Following' : 'Follow' ?>
+                <?php if(($u['id'] ?? null) != session()->get('user_id')): ?>
+                <form class="follow-toggle-form" action="<?= site_url('users/toggleFollow/'.($u['id'] ?? '')) ?>" method="POST" data-user-id="<?= $u['id'] ?? '' ?>">
+                    <button type="submit" class="glass-btn btn-sm follow-toggle-btn" style="<?= !empty($u['is_following']) ? 'background: transparent; border: 1px solid var(--glass-border); color: var(--text-primary);' : '' ?>">
+                        <?= !empty($u['is_following']) ? 'Following' : 'Follow' ?>
                     </button>
                 </form>
                 <?php endif; ?>

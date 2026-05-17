@@ -14,29 +14,54 @@ class NetworkController extends BaseController
 
     public function toggleFollow($followedId)
     {
-        $followerId = $this->request->user_id;
+        $followerId = session()->get('user_id');
+        
+        if (!$followerId) {
+            return $this->fail('Not authenticated', 401);
+        }
+        
         if ($followerId == $followedId) {
-            return $this->fail('You cannot follow yourself');
+            return $this->fail('You cannot follow yourself', 400);
         }
 
         $followModel = new FollowModel();
+        $userModel = new \App\Models\UserModel();
+        
+        // Verify user exists
+        $user = $userModel->find($followedId);
+        if (!$user) {
+            return $this->fail('User not found', 404);
+        }
+        
         $existing = $followModel->where('follower_id', $followerId)->where('followed_id', $followedId)->first();
 
         if ($existing) {
             $followModel->where('follower_id', $followerId)->where('followed_id', $followedId)->delete();
-            return $this->respond(['status' => 'success', 'message' => 'Unfollowed']);
+            $followersCount = $followModel->where('followed_id', $followedId)->countAllResults();
+            return $this->respond([
+                'status' => 'success', 
+                'message' => 'Unfollowed',
+                'is_following' => false,
+                'followers_count' => $followersCount
+            ]);
         } else {
-            $followModel->insert(['follower_id' => $followerId, 'followed_id' => $followedId]);
+            $followModel->skipValidation(true)->insert(['follower_id' => $followerId, 'followed_id' => $followedId]);
             
             // Send notification
             $notifModel = new NotificationModel();
-            $notifModel->insert([
+            $notifModel->skipValidation(true)->insert([
                 'recipient_id' => $followedId,
                 'sender_id' => $followerId,
                 'type' => 'follow'
             ]);
 
-            return $this->respond(['status' => 'success', 'message' => 'Followed']);
+            $followersCount = $followModel->where('followed_id', $followedId)->countAllResults();
+            return $this->respond([
+                'status' => 'success', 
+                'message' => 'Followed',
+                'is_following' => true,
+                'followers_count' => $followersCount
+            ]);
         }
     }
 

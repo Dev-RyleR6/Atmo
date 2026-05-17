@@ -46,6 +46,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     let currentFeedType = 'for_you';
     
+    function safeClosest(node, selector) {
+        let element = node;
+        while (element && element.nodeType !== Node.ELEMENT_NODE) {
+            element = element.parentNode;
+        }
+        return element instanceof Element ? element.closest(selector) : null;
+    }
+
     // Set current feed type from active tab
     const activeTab = document.querySelector('.feed-tab.active');
     if (activeTab && activeTab.dataset.feedType) {
@@ -203,6 +211,59 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // AJAX follow/unfollow handling (delegated)
+    document.addEventListener('submit', function(e) {
+        const form = safeClosest(e.target, '.follow-toggle-form');
+        if (!form) return;
+        e.preventDefault();
+
+        const userId = form.dataset.userId;
+        if (!userId) return;
+
+        const btn = form.querySelector('.follow-toggle-btn');
+        if (!btn) return;
+
+        fetch(`/api/users/toggleFollow/${encodeURIComponent(userId)}`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        }).then(res => res.json()).then(data => {
+            if (data && data.status === 'success') {
+                const isFollowing = data.is_following === true;
+                // Update button label and style
+                btn.textContent = isFollowing ? 'Following' : 'Follow';
+                if (isFollowing) {
+                    btn.style.background = 'transparent';
+                    btn.style.border = '1px solid var(--glass-border)';
+                    btn.style.color = 'var(--text-primary)';
+                } else {
+                    btn.style.background = '';
+                    btn.style.border = '';
+                    btn.style.color = '';
+                }
+
+                // Update follower count if present on page
+                const followersCountEl = document.getElementById('followersCount');
+                if (followersCountEl && typeof data.followers_count !== 'undefined') {
+                    followersCountEl.textContent = data.followers_count;
+                } else if (followersCountEl && data.is_following !== undefined) {
+                    // adjust by +-1
+                    let val = parseInt(followersCountEl.textContent || '0', 10) || 0;
+                    followersCountEl.textContent = isFollowing ? (val + 1) : Math.max(0, val - 1);
+                }
+
+                // If button exists elsewhere (e.g., profile follow), update that too
+                document.querySelectorAll(`form.follow-toggle-form[data-user-id="${userId}"]`).forEach(f => {
+                    const b = f.querySelector('.follow-toggle-btn');
+                    if (b) b.textContent = isFollowing ? 'Following' : 'Follow';
+                });
+            }
+        }).catch(err => {
+            console.error('Follow toggle error', err);
+        });
+    });
+
     // Post card animations on scroll
     const postCards = document.querySelectorAll('.post-card');
     const observerOptions = {
@@ -252,8 +313,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div class="suggested-user-username text-truncate">@${user.username}</div>
                             </a>
                         </div>
-                        <form action="/users/toggleFollow/${user.id}" method="POST" class="m-0">
-                            <button type="submit" class="glass-btn btn-sm" style="padding: 4px 12px; font-size: 0.75rem;">Follow</button>
+                        <form action="/users/toggleFollow/${user.id}" method="POST" class="follow-toggle-form m-0" data-user-id="${user.id}">
+                            <button type="submit" class="glass-btn btn-sm follow-toggle-btn" style="padding: 4px 12px; font-size: 0.75rem;">Follow</button>
                         </form>
                     </div>
                 `).join('');
@@ -264,13 +325,22 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    // Trending Topics Logic
+    // Trending Topics Logic - Fetch and display real trending posts
     const trendingList = document.getElementById('trendingList');
     if (trendingList) {
         fetch('/api/posts/trending')
-            .then(response => response.json())
-            .then(topics => {
-                if (topics.length === 0) {
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Trending request failed with status ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const topics = Array.isArray(data)
+                    ? data
+                    : (data && Array.isArray(data.data) ? data.data : []);
+
+                if (!Array.isArray(topics) || topics.length === 0) {
                     trendingList.innerHTML = '<div class="text-muted small">No trending topics right now.</div>';
                     return;
                 }
@@ -281,10 +351,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         postCountStr = (postCountStr / 1000).toFixed(1) + 'K';
                     }
                     return `
-                        <div class="trending-item">
+                        <div class="trending-item" onclick="window.location.href='/profile/${topic.username}'" style="cursor: pointer;">
                             <small class="text-muted">${topic.category} · Trending</small>
-                            <div class="fw-bold">${topic.topic}</div>
-                            <small class="text-muted">${postCountStr} Posts</small>
+                            <div class="fw-bold" style="font-size: 0.95rem; max-width: 100%; word-wrap: break-word;">${escapeHtml(topic.topic)}</div>
+                            <small class="text-muted">${postCountStr} interactions</small>
                         </div>
                     `;
                 }).join('');
@@ -295,11 +365,39 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
+    // Keep track of which button opened the active modal so we can restore focus safely.
+    const modalFocusTrigger = new WeakMap();
+
     // Close search dropdown when any modal opens
-    document.addEventListener('show.bs.modal', function () {
+    document.addEventListener('show.bs.modal', function (event) {
         if (searchDropdown) {
             searchDropdown.style.display = 'none';
         }
+
+        if (event.relatedTarget instanceof HTMLElement) {
+            modalFocusTrigger.set(event.target, event.relatedTarget);
+        }
+    });
+
+    // Clear retained focus before a modal is hidden to avoid aria-hidden warnings.
+    document.addEventListener('hide.bs.modal', function (event) {
+        const modal = event.target;
+        const active = document.activeElement;
+
+        if (modal instanceof HTMLElement && active instanceof HTMLElement && modal.contains(active)) {
+            active.blur();
+
+            const trigger = modalFocusTrigger.get(modal);
+            if (trigger instanceof HTMLElement && document.body.contains(trigger)) {
+                trigger.focus({ preventScroll: true });
+            } else {
+                document.body.setAttribute('tabindex', '-1');
+                document.body.focus();
+                document.body.removeAttribute('tabindex');
+            }
+        }
+
+        modalFocusTrigger.delete(modal);
     });
 
     // Feed Tab Switching
@@ -323,7 +421,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Toggle Like via AJAX
     document.addEventListener('click', async function(e) {
-        const likeBtn = e.target.closest('.like-btn');
+        const likeBtn = safeClosest(e.target, '.like-btn');
         if (likeBtn) {
             e.preventDefault();
             const form = likeBtn.closest('form');
@@ -357,7 +455,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Toggle Repost via AJAX
     document.addEventListener('click', async function(e) {
-        const repostBtn = e.target.closest('.repost-btn');
+        const repostBtn = safeClosest(e.target, '.repost-btn');
         if (repostBtn) {
             e.preventDefault();
             const form = repostBtn.closest('form');
@@ -394,7 +492,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add Comment via AJAX
     document.addEventListener('submit', async function(e) {
-        const commentForm = e.target.closest('[action*="addComment"]');
+        const commentForm = safeClosest(e.target, '[action*="addComment"]');
         if (commentForm) {
             e.preventDefault();
             const actionUrl = commentForm.getAttribute('action');
@@ -749,7 +847,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle notification clicks
     if (notificationsList) {
         notificationsList.addEventListener('click', function(e) {
-            const notificationItem = e.target.closest('.notification-item');
+            const notificationItem = safeClosest(e.target, '.notification-item');
             if (notificationItem) {
                 const notificationId = notificationItem.dataset.notificationId;
                 const isRead = notificationItem.dataset.isRead === '1' || notificationItem.dataset.isRead === 'true';
@@ -785,4 +883,163 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Poll for new notifications every 30 seconds
     setInterval(loadUnreadCount, 30000);
+
+    // Comment Hover Actions
+    document.addEventListener('mouseenter', function(e) {
+        const commentItem = safeClosest(e.target, '.comment-item');
+        if (commentItem) {
+            const commentActions = commentItem.querySelector('.comment-actions');
+            if (commentActions) {
+                commentActions.style.opacity = '1';
+            }
+        }
+    }, true);
+
+    document.addEventListener('mouseleave', function(e) {
+        const commentItem = safeClosest(e.target, '.comment-item');
+        if (commentItem) {
+            const commentActions = commentItem.querySelector('.comment-actions');
+            if (commentActions) {
+                commentActions.style.opacity = '0';
+            }
+        }
+    }, true);
+
+    // Comment Edit Handler
+    document.addEventListener('click', function(e) {
+        const editBtn = safeClosest(e.target, '.comment-edit-btn');
+        if (editBtn) {
+            e.preventDefault();
+            const commentId = editBtn.dataset.commentId;
+            const commentText = editBtn.dataset.commentText;
+            const commentItem = editBtn.closest('.comment-item');
+            
+            // Create edit form
+            const editForm = document.createElement('div');
+            editForm.className = 'comment-edit-form';
+            editForm.style.cssText = `
+                display: flex;
+                gap: 8px;
+                align-items: flex-start;
+                margin-top: 8px;
+            `;
+            
+            editForm.innerHTML = `
+                <textarea class="glass-input comment-edit-textarea" style="flex: 1; resize: none; min-height: 60px;">${escapeHtml(commentText)}</textarea>
+                <div style="display: flex; gap: 4px; flex-direction: column;">
+                    <button type="button" class="comment-save-btn" data-comment-id="${commentId}" style="background: var(--accent-color); border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s ease;">Save</button>
+                    <button type="button" class="comment-cancel-btn" style="background: var(--text-secondary); border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s ease;">Cancel</button>
+                </div>
+            `;
+            
+            // Replace comment text with edit form
+            const commentText_el = commentItem.querySelector('.comment-text');
+            const commentActions = commentItem.querySelector('.comment-actions');
+            if (commentText_el && commentActions) {
+                commentText_el.style.display = 'none';
+                commentActions.style.display = 'none';
+                commentItem.querySelector('.flex-grow-1').appendChild(editForm);
+                
+                // Focus textarea
+                editForm.querySelector('.comment-edit-textarea').focus();
+                
+                // Cancel handler
+                editForm.querySelector('.comment-cancel-btn').addEventListener('click', function() {
+                    editForm.remove();
+                    commentText_el.style.display = '';
+                    commentActions.style.display = '';
+                });
+                
+                // Save handler
+                editForm.querySelector('.comment-save-btn').addEventListener('click', async function() {
+                    const newText = editForm.querySelector('.comment-edit-textarea').value.trim();
+                    if (!newText) {
+                        alert('Comment cannot be empty');
+                        return;
+                    }
+                    
+                    try {
+                        const formData = new FormData();
+                        formData.append('comment_text', newText);
+                        
+                        const response = await fetch(`/posts/editComment/${commentId}`, {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        if (response.ok) {
+                            // Update comment text
+                            commentText_el.textContent = newText;
+                            editForm.remove();
+                            commentText_el.style.display = '';
+                            commentActions.style.display = '';
+                            showNotification('Comment updated successfully');
+                        } else {
+                            alert('Failed to update comment');
+                        }
+                    } catch (error) {
+                        console.error('Error updating comment:', error);
+                        alert('Error updating comment');
+                    }
+                });
+            }
+        }
+    });
+
+    // Comment Delete Handler
+    document.addEventListener('click', function(e) {
+        const deleteBtn = safeClosest(e.target, '.comment-delete-btn');
+        if (deleteBtn) {
+            e.preventDefault();
+            if (!confirm('Are you sure you want to delete this comment?')) {
+                return;
+            }
+            
+            const commentId = deleteBtn.dataset.commentId;
+            const commentItem = deleteBtn.closest('.comment-item');
+            
+            // Create hidden form and submit
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/posts/deleteComment/${commentId}`;
+            form.style.display = 'none';
+            
+            document.body.appendChild(form);
+            
+            // Show loading state
+            deleteBtn.style.opacity = '0.5';
+            deleteBtn.style.pointerEvents = 'none';
+            
+            // Submit form
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            }).then(response => {
+                if (response.ok) {
+                    // Fade out and remove comment
+                    commentItem.style.transition = 'all 0.3s ease';
+                    commentItem.style.opacity = '0';
+                    commentItem.style.maxHeight = '0';
+                    setTimeout(() => {
+                        commentItem.remove();
+                        showNotification('Comment deleted successfully');
+                    }, 300);
+                } else {
+                    alert('Failed to delete comment');
+                    deleteBtn.style.opacity = '1';
+                    deleteBtn.style.pointerEvents = 'auto';
+                }
+            }).catch(error => {
+                console.error('Error deleting comment:', error);
+                alert('Error deleting comment');
+                deleteBtn.style.opacity = '1';
+                deleteBtn.style.pointerEvents = 'auto';
+            }).finally(() => {
+                form.remove();
+            });
+        }
+    });
 });
+

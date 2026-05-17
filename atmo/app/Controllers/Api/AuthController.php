@@ -24,7 +24,7 @@ class AuthController extends BaseController
             'last_name'  => $this->request->getVar('last_name'),
             'dob'        => $this->request->getVar('dob'),
             'sex'        => $this->request->getVar('sex'),
-            'profile_pic' => 'default_user.png',
+            'profile_pic' => 'vecteezy_user-solid-icon_22808249.svg',
             'bio'        => $this->request->getVar('bio') ?? ''
         ];
 

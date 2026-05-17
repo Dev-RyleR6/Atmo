@@ -34,19 +34,22 @@ class UserController extends BaseController
         $repostModel = new \App\Models\RepostModel();
         $userModel = new UserModel();
         
-        // Fetch original posts
-        $posts = $postModel->where('user_id', $user['id'])
+        // Fetch original posts - initialize safely
+        $postsQuery = $postModel->where('user_id', $user['id'])
                            ->where('visibility !=', 'private')
                            ->orderBy('created_at', 'DESC')
                            ->findAll();
+        $posts = is_array($postsQuery) ? $postsQuery : [];
                            
-        // Fetch Reposts
-        $reposts = $repostModel->where('user_id', $user['id'])
+        // Fetch Reposts - initialize safely
+        $repostsQuery = $repostModel->where('user_id', $user['id'])
                                ->orderBy('created_at', 'DESC')
                                ->findAll();
+        $reposts = is_array($repostsQuery) ? $repostsQuery : [];
         
         // Helper function to add social data to a post
         $addSocialData = function(&$post) use ($likeModel, $commentModel, $repostModel, $loggedInUserId, $userModel) {
+            if (!isset($post['id'])) return;
             $postId = $post['id'];
             $post['like_count'] = $likeModel->where('post_id', $postId)->countAllResults();
             $post['comment_count'] = $commentModel->where('post_id', $postId)->countAllResults();
@@ -54,16 +57,22 @@ class UserController extends BaseController
             $post['is_liked'] = $loggedInUserId && $likeModel->where('user_id', $loggedInUserId)->where('post_id', $postId)->first() ? true : false;
             $post['is_reposted'] = $loggedInUserId && $repostModel->where('user_id', $loggedInUserId)->where('post_id', $postId)->first() ? true : false;
             
-            // Fetch comments with user data
-            $comments = $commentModel->where('post_id', $postId)
+            // Fetch comments with user data - always initialize as array
+            $commentsQuery = $commentModel->where('post_id', $postId)
                                      ->orderBy('created_at', 'ASC')
                                      ->limit(10)
                                      ->findAll();
+            $comments = is_array($commentsQuery) ? $commentsQuery : [];
+            
             foreach ($comments as &$comment) {
-                $commentUser = $userModel->find($comment['user_id']);
-                if ($commentUser) {
-                    unset($commentUser['password']);
-                    $comment['user'] = $commentUser;
+                if (isset($comment['user_id'])) {
+                    $commentUser = $userModel->find($comment['user_id']);
+                    if ($commentUser) {
+                        unset($commentUser['password']);
+                        $comment['user'] = $commentUser;
+                    } else {
+                        $comment['user'] = [];
+                    }
                 }
             }
             $post['comments'] = $comments;
@@ -71,48 +80,79 @@ class UserController extends BaseController
         
         // Process original posts
         $validPosts = [];
-        foreach ($posts as &$post) {
-            $post['type'] = 'original';
-            if (empty($post['content']) && empty($post['media_path'])) {
-                continue;
+        if (is_array($posts)) {
+            foreach ($posts as &$post) {
+                $post['type'] = 'original';
+                if (empty($post['content']) && empty($post['media_path'])) {
+                    continue;
+                }
+                if (!isset($post['user_id'])) {
+                    continue;
+                }
+                $user_obj = $userModel->find($post['user_id']);
+                if (!$user_obj) {
+                    continue; // Skip if user not found
+                }
+                unset($user_obj['password']);
+                $post['user'] = $user_obj;
+                $addSocialData($post);
+                $validPosts[] = $post;
             }
-            $post['user'] = $user;
-            $addSocialData($post);
-            $validPosts[] = $post;
         }
         $posts = $validPosts;
 
         // Process reposts
         $validReposts = [];
-        foreach ($reposts as &$repost) {
-            $repost['type'] = 'repost';
-            $repost['reposted_by'] = $user;
-            
-            $originalPost = $postModel->find($repost['post_id']);
-            if (!$originalPost) {
-                continue;
+        if (is_array($reposts)) {
+            foreach ($reposts as &$repost) {
+                $repost['type'] = 'repost';
+                if (!isset($repost['user_id'])) {
+                    continue;
+                }
+                $repost_author = $userModel->find($repost['user_id']);
+                if (!$repost_author) {
+                    continue;
+                }
+                unset($repost_author['password']);
+                $repost['reposted_by'] = $repost_author;
+                
+                if (!isset($repost['post_id'])) {
+                    continue;
+                }
+                $originalPost = $postModel->find($repost['post_id']);
+                if (!$originalPost) {
+                    continue;
+                }
+                if ($originalPost['visibility'] == 'private') {
+                    continue;
+                }
+                if (empty($originalPost['content']) && empty($originalPost['media_path'])) {
+                    continue;
+                }
+                
+                if (!isset($originalPost['user_id'])) {
+                    continue;
+                }
+                $originalUser = $userModel->find($originalPost['user_id']);
+                if (!$originalUser) {
+                    continue;
+                }
+                unset($originalUser['password']);
+                $originalPost['user'] = $originalUser;
+                $addSocialData($originalPost);
+                
+                $repost['original_post'] = $originalPost;
+                $repost['created_at'] = $repost['created_at'] ?? null;
+                $validReposts[] = $repost;
             }
-            if ($originalPost['visibility'] == 'private') {
-                continue;
-            }
-            
-            $originalUser = $userModel->find($originalPost['user_id']);
-            if (!$originalUser) {
-                continue;
-            }
-            unset($originalUser['password']);
-            $originalPost['user'] = $originalUser;
-            $addSocialData($originalPost);
-            
-            $repost['original_post'] = $originalPost;
-            $repost['created_at'] = $repost['created_at'];
-            $validReposts[] = $repost;
         }
 
         // Merge and sort
         $allPosts = array_merge($posts, $validReposts);
         usort($allPosts, function($a, $b) {
-            return strtotime($b['created_at']) - strtotime($a['created_at']);
+            $aTime = isset($a['created_at']) ? strtotime($a['created_at']) : 0;
+            $bTime = isset($b['created_at']) ? strtotime($b['created_at']) : 0;
+            return $bTime - $aTime;
         });
         $posts = $allPosts;
                            
@@ -131,7 +171,7 @@ class UserController extends BaseController
 
         $data = [
             'user' => $user,
-            'posts' => $posts,
+            'posts' => $posts ?? [],
             'followers_count' => $followersCount,
             'following_count' => $followingCount,
             'is_own_profile' => $isOwnProfile,
@@ -164,6 +204,40 @@ class UserController extends BaseController
         $userId = session()->get('user_id');
         $userModel = new UserModel();
 
+        // Handle password update separately
+        $currentPassword = $this->request->getPost('current_password');
+        $newPassword = $this->request->getPost('new_password');
+        $confirmPassword = $this->request->getPost('confirm_password');
+        
+        if (!empty($currentPassword) || !empty($newPassword) || !empty($confirmPassword)) {
+            // Password update requested
+            if (empty($currentPassword) || empty($newPassword) || empty($confirmPassword)) {
+                return redirect()->back()->with('error', 'Please fill in all password fields');
+            }
+            
+            if ($newPassword !== $confirmPassword) {
+                return redirect()->back()->with('error', 'New passwords do not match');
+            }
+            
+            if (strlen($newPassword) < 8) {
+                return redirect()->back()->with('error', 'New password must be at least 8 characters');
+            }
+            
+            // Verify current password
+            $user = $userModel->find($userId);
+            if (!$user || !password_verify($currentPassword, $user['password'])) {
+                return redirect()->back()->with('error', 'Current password is incorrect');
+            }
+            
+            // Update password
+            $userModel->skipValidation(true)->update($userId, [
+                'password' => password_hash($newPassword, PASSWORD_DEFAULT)
+            ]);
+            
+            return redirect()->back()->with('success', 'Password updated successfully');
+        }
+
+        // Handle profile field updates
         $rules = [
             'first_name'  => 'permit_empty|string|max_length[100]',
             'last_name'   => 'permit_empty|string|max_length[100]',
@@ -176,7 +250,6 @@ class UserController extends BaseController
         if ($pic && $pic->isValid()) {
             $rules['profile_pic'] = 'max_size[profile_pic,10240]|is_image[profile_pic]';
         }
-
 
         if (!$this->validate($rules)) {
             return redirect()->back()->with('errors', $this->validator->getErrors());
@@ -245,15 +318,20 @@ class UserController extends BaseController
 
         unset($user['password']);
         
-        // Get followers
-        $followers = $followModel->where('followed_id', $user['id'])->findAll();
-        $followerIds = array_column($followers, 'follower_id');
+        // Get followers - ensure safe array
+        $followersQuery = $followModel->where('followed_id', $user['id'])->findAll();
+        $followers = is_array($followersQuery) ? $followersQuery : [];
+        $followerIds = !empty($followers) ? array_column($followers, 'follower_id') : [];
         
         $followerUsers = [];
         if (!empty($followerIds)) {
-            $followerUsers = $userModel->whereIn('id', $followerIds)->findAll();
+            $followerUsersQuery = $userModel->whereIn('id', $followerIds)->findAll();
+            $followerUsers = is_array($followerUsersQuery) ? $followerUsersQuery : [];
+            
             foreach ($followerUsers as &$follower) {
-                unset($follower['password']);
+                if (isset($follower['password'])) {
+                    unset($follower['password']);
+                }
                 // Check if logged in user follows this follower
                 $follower['is_following'] = $loggedInUserId && $followModel->where('follower_id', $loggedInUserId)->where('followed_id', $follower['id'])->first() ? true : false;
             }
@@ -284,15 +362,20 @@ class UserController extends BaseController
 
         unset($user['password']);
         
-        // Get following
-        $following = $followModel->where('follower_id', $user['id'])->findAll();
-        $followingIds = array_column($following, 'followed_id');
+        // Get following - ensure safe array
+        $followingQuery = $followModel->where('follower_id', $user['id'])->findAll();
+        $following = is_array($followingQuery) ? $followingQuery : [];
+        $followingIds = !empty($following) ? array_column($following, 'followed_id') : [];
         
         $followingUsers = [];
         if (!empty($followingIds)) {
-            $followingUsers = $userModel->whereIn('id', $followingIds)->findAll();
+            $followingUsersQuery = $userModel->whereIn('id', $followingIds)->findAll();
+            $followingUsers = is_array($followingUsersQuery) ? $followingUsersQuery : [];
+            
             foreach ($followingUsers as &$followed) {
-                unset($followed['password']);
+                if (isset($followed['password'])) {
+                    unset($followed['password']);
+                }
                 // Check if logged in user follows this user
                 $followed['is_following'] = $loggedInUserId && $followModel->where('follower_id', $loggedInUserId)->where('followed_id', $followed['id'])->first() ? true : false;
             }

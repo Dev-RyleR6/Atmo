@@ -23,6 +23,8 @@ $routes->group('', ['filter' => 'auth_web'], function($routes) {
     $routes->post('posts/delete/(:num)', 'PostController::delete/$1');
     $routes->post('posts/toggleLike/(:num)', 'PostController::toggleLike/$1');
     $routes->post('posts/addComment/(:num)', 'PostController::addComment/$1');
+    $routes->post('posts/editComment/(:num)', 'PostController::editComment/$1');
+    $routes->post('posts/deleteComment/(:num)', 'PostController::deleteComment/$1');
     $routes->post('posts/toggleRepost/(:num)', 'PostController::toggleRepost/$1');
     
     // Profile
@@ -48,17 +50,19 @@ $routes->group('api', function($routes) {
     $routes->get('users/(:segment)', 'Api\UserController::show/$1');
     $routes->get('users/followers/(:segment)', 'Api\UserController::followers/$1');
     $routes->get('users/following/(:segment)', 'Api\UserController::following/$1');
+    // API follow/unfollow (AJAX)
+    $routes->post('users/toggleFollow/(:num)', 'Api\NetworkController::toggleFollow/$1');
     
     // Post API Routes
     $routes->get('posts', 'Api\PostController::index');
+    $routes->get('posts/trending', 'Api\PostController::trending');
+    $routes->get('posts/(:num)', 'Api\PostController::show/$1');
     $routes->get('posts/(:segment)', 'Api\PostController::index/$1');
     $routes->post('posts', 'Api\PostController::create');
-    $routes->get('posts/(:num)', 'Api\PostController::show/$1');
     $routes->delete('posts/(:num)', 'Api\PostController::delete/$1');
     $routes->post('posts/toggleLike/(:num)', 'Api\PostController::toggleLike/$1');
     $routes->post('posts/toggleRepost/(:num)', 'Api\PostController::toggleRepost/$1');
     $routes->post('posts/addComment/(:num)', 'Api\PostController::addComment/$1');
-    $routes->get('posts/trending', 'Api\PostController::trending');
     
     // Notification API Routes
     $routes->get('notifications', 'Api\NotificationController::index');

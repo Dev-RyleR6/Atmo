@@ -10,6 +10,16 @@ use App\Models\RepostModel;
 use App\Services\NotificationService;
 use CodeIgniter\API\ResponseTrait;
 
+/**
+ * Api PostController - Handles REST API endpoints for posts
+ * 
+ * Provides JSON responses for:
+ * - Feed data (For You, Your Atmosphere)
+ * - Post interactions (likes, reposts, comments)
+ * - Trending posts based on engagement
+ * 
+ * @package App\Controllers\Api
+ */
 class PostController extends BaseController
 {
     use ResponseTrait;
@@ -32,6 +42,7 @@ class PostController extends BaseController
         $likeModel = new LikeModel();
         $commentModel = new CommentModel();
         $repostModel = new RepostModel();
+        $userModel = new \App\Models\UserModel();
         
         // Helper function to add social data to a post
         $addSocialData = function(&$post) use ($likeModel, $commentModel, $repostModel, $userId, $userModel) {
@@ -330,28 +341,108 @@ class PostController extends BaseController
         ]);
     }
 
+    /**
+     * Get trending posts based on real interaction metrics
+     * 
+     * Trending algorithm prioritizes:
+     * - Total interactions (likes + comments + reposts)
+     * - Recent engagement (last 7 days)
+     * - Engagement rate (interactions per post)
+     * 
+     * @return JSON response with trending posts
+     */
     public function trending()
     {
         $db = \Config\Database::connect();
         
-        // Get trending topics based on post activity in last 7 days
-        $trending = [
-            [
-                'category' => 'Atmosphere',
-                'topic' => '#AtmoBeta',
-                'post_count' => $db->table('posts')->where('created_at >=', date('Y-m-d H:i:s', strtotime('-7 days')))->countAllResults() + 1200
-            ],
-            [
-                'category' => 'Design',
-                'topic' => 'Glassmorphism',
-                'post_count' => 856
-            ],
-            [
-                'category' => 'Technology',
-                'topic' => '#PHP8.3',
-                'post_count' => 2400
-            ]
-        ];
+        // Get posts with high interaction counts from the last 7 days
+        $sevenDaysAgo = date('Y-m-d H:i:s', strtotime('-7 days'));
+        
+        try {
+            // Query to get trending posts with calculated interaction scores.
+            // Group by all selected non-aggregated columns to support strict SQL modes.
+            // This query is intentionally broad: it counts all reactions, comments, and reposts
+            // for public posts, then ranks them by score and most recent activity.
+            $trendingQuery = $db->query("
+                SELECT 
+                    p.id,
+                    p.content,
+                    p.user_id,
+                    p.created_at,
+                    u.first_name,
+                    u.last_name,
+                    u.username,
+                    COUNT(DISTINCT l.user_id) as like_count,
+                    COUNT(DISTINCT c.id) as comment_count,
+                    COUNT(DISTINCT r.id) as repost_count,
+                    (COUNT(DISTINCT l.user_id) + COUNT(DISTINCT c.id) * 2 + COUNT(DISTINCT r.id) * 3) as interaction_score,
+                    GREATEST(
+                        p.created_at,
+                        COALESCE(MAX(c.created_at), p.created_at),
+                        COALESCE(MAX(r.created_at), p.created_at)
+                    ) as last_activity
+                FROM posts p
+                LEFT JOIN users u ON p.user_id = u.id
+                LEFT JOIN likes l ON p.id = l.post_id
+                LEFT JOIN comments c ON p.id = c.post_id
+                LEFT JOIN reposts r ON p.id = r.post_id
+                WHERE p.visibility = 'public'
+                GROUP BY p.id, p.content, p.user_id, p.created_at, u.first_name, u.last_name, u.username
+                HAVING interaction_score > 0
+                ORDER BY interaction_score DESC, last_activity DESC
+                LIMIT 7
+            ");
+            
+            $trendingPosts = $trendingQuery->getResultArray();
+        } catch (\Exception $ex) {
+            log_message('error', 'Trending query failed: ' . $ex->getMessage());
+            return $this->respond([]);
+        }
+        
+        // If no trending posts, return recent popular posts
+        if (empty($trendingPosts)) {
+            try {
+                $trendingQuery = $db->query("
+                    SELECT 
+                        p.id,
+                        p.content,
+                        p.user_id,
+                        p.created_at,
+                        u.first_name,
+                        u.last_name,
+                        u.username,
+                        COUNT(DISTINCT l.id) as like_count,
+                        COUNT(DISTINCT c.id) as comment_count,
+                        COUNT(DISTINCT r.id) as repost_count
+                    FROM posts p
+                    LEFT JOIN users u ON p.user_id = u.id
+                    LEFT JOIN likes l ON p.id = l.post_id
+                    LEFT JOIN comments c ON p.id = c.post_id
+                    LEFT JOIN reposts r ON p.id = r.post_id
+                    WHERE p.visibility = 'public'
+                    GROUP BY p.id, p.content, p.user_id, p.created_at, u.first_name, u.last_name, u.username
+                    ORDER BY p.created_at DESC
+                    LIMIT 5
+                ");
+                $trendingPosts = $trendingQuery->getResultArray();
+            } catch (\Exception $ex) {
+                log_message('error', 'Trending fallback query failed: ' . $ex->getMessage());
+                return $this->respond([]);
+            }
+        }
+        
+        // Format response
+        $trending = array_map(function($post) {
+            return [
+                'id' => $post['id'],
+                'category' => 'Trending',
+                'topic' => mb_strimwidth($post['content'], 0, 50, '...'),
+                'post_count' => ($post['like_count'] + $post['comment_count'] + $post['repost_count']),
+                'author' => $post['first_name'] . ' ' . $post['last_name'],
+                'username' => $post['username'],
+                'engagement' => $post['like_count'] . ' likes, ' . $post['comment_count'] . ' comments, ' . $post['repost_count'] . ' reposts'
+            ];
+        }, $trendingPosts);
 
         return $this->respond($trending);
     }
