@@ -161,7 +161,8 @@
                         style="padding: 10px 16px; border-radius: 999px; display: flex; align-items: center; gap: 8px;">
                         <i class="bi bi-search text-muted"></i>
                         <input type="search" id="searchInput" class="glass-input" placeholder="Search Atmo"
-                            value="<?= esc(request()->getGet('q') ?? '') ?>" autocomplete="off">
+                            value="<?= esc(request()->getGet('q') ?? '') ?>" autocomplete="off"
+                            style="border: none !important; background: transparent !important; box-shadow: none !important; padding: 0 !important; border-radius: 0 !important;">
                     </div>
                     <!-- Search Results Dropdown -->
                     <div id="searchDropdown" class="search-dropdown glass-panel" style="display: none;"></div>

@@ -47,22 +47,23 @@
 }
 
 .comment-edit-textarea {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--glass-border);
     color: var(--text-primary);
     border-radius: 8px;
-    padding: 8px 12px;
+    padding: 10px 14px;
     font-family: inherit;
-    font-size: 0.95rem;
+    font-size: 1.05rem;
     resize: vertical;
-    min-height: 60px;
-    transition: border-color 0.2s ease;
+    min-height: 80px;
+    transition: all 0.2s ease;
 }
 
 .comment-edit-textarea:focus {
     outline: none;
+    background: rgba(255, 255, 255, 0.08);
     border-color: var(--accent-color);
-    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
 }
 
 .comment-edit-actions {

@@ -746,7 +746,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (response.ok) {
                     const data = await response.json();
-                    console.log('Add Comment API Response:', data);
                     
                     // Clear the textarea
                     textarea.value = '';

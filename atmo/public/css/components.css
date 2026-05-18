@@ -29,14 +29,15 @@
 
 /* Forms & Inputs */
 .glass-input {
-    background: transparent;
-    border: none;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
     color: var(--text-primary);
     width: 100%;
     outline: none;
     font-family: inherit;
     font-size: 1.05rem;
-    padding: 6px 0;
+    padding: 10px 14px;
+    border-radius: 8px;
     position: relative;
     z-index: 10001;
     pointer-events: auto;
@@ -49,6 +50,8 @@
 
 .glass-input:focus {
     background: rgba(255, 255, 255, 0.08);
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
 }
 
 /* Ensure select/options are visible in both light and dark themes */
@@ -100,13 +103,6 @@ select.glass-input option:hover {
 .glass-btn:focus {
     outline: 2px solid var(--accent-color);
     outline-offset: 2px;
-}
-
-/* Border Consistency */
-.glass-panel,
-.modal-content,
-.glass-input {
-    border: 1px solid var(--glass-border);
 }
 
 /* Shadow Consistency */
