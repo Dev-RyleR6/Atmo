@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="current-user-id" content="<?= esc(session()->get('user_id') ?? '') ?>">
     <title><?= esc($title ?? 'Atmo - Create Your Own Atmosphere') ?></title>
     <link rel="icon" href="<?= base_url('atmo_logo.png') ?>" type="image/x-icon">
     <!-- Bootstrap CSS (Reset/Grid base only) -->
@@ -65,6 +66,14 @@
                         </a>
                     </li>
                 </ul>
+
+                <!-- Theme Toggle -->
+                <div class="theme-toggle-container" style="padding: 12px 8px; margin-bottom: 8px;">
+                    <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle dark/light mode" aria-label="Toggle theme">
+                        <i class="bi bi-moon-stars"></i>
+                        <span class="theme-toggle-label">Dark</span>
+                    </button>
+                </div>
 
                 <!-- Authenticated User Tag -->
                 <div class="user-profile-tag">

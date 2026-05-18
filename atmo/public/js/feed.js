@@ -1,4 +1,47 @@
+/**
+ * ATMO Social Media Feed JavaScript
+ * =====================================
+ * 
+ * This file handles all frontend functionality for the Atmo social media platform:
+ * - Theme toggling (dark/light mode with localStorage persistence)
+ * - Feed rendering and interactions (likes, reposts, comments)
+ * - Real-time notifications and trending topics
+ * - Post composition and media handling
+ * - Comment CRUD operations with AJAX
+ * - Search functionality
+ * 
+ * Key Features:
+ * - Event delegation for dynamic elements
+ * - AJAX-based interactions for smooth UX
+ * - Automatic UI updates without page reload
+ * - Responsive design support
+ * 
+ * Dependencies:
+ * - Bootstrap 5.3+ (for modals and alerts)
+ * - Bootstrap Icons (for UI icons)
+ * 
+ * API Endpoints Used:
+ * - POST /api/posts/toggleLike/{postId}
+ * - POST /api/posts/toggleRepost/{postId}
+ * - POST /api/posts/addComment/{postId}
+ * - POST /posts/editComment/{commentId}
+ * - DELETE /posts/deleteComment/{commentId}
+ * - POST /api/users/toggleFollow/{userId}
+ * - GET /api/users/search?q={query}
+ * - GET /api/users/suggested
+ * - GET /api/posts/trending
+ * - GET /api/notifications
+ * - GET /api/notifications/unreadCount
+ * - POST /api/notifications/markAsRead/{notificationId}
+ */
+
 function showNotification(message) {
+    /**
+     * Display a temporary success notification toast
+     * 
+     * @param {string} message - The notification message to display
+     * Shows for 3 seconds then auto-dismisses
+     */
     const notification = document.createElement('div');
     notification.className = 'alert alert-success alert-dismissible fade show glass-panel';
     notification.style.cssText = `
@@ -35,6 +78,76 @@ function showNotification(message) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    // ===== THEME TOGGLE INITIALIZATION & HANDLERS =====
+    /**
+     * Theme Management System
+     * 
+     * Features:
+     * - Loads theme preference from localStorage
+     * - Falls back to system preference (prefers-color-scheme)
+     * - Defaults to dark mode if no preference found
+     * - Updates <html> data-bs-theme attribute
+     * - Persists user choice in localStorage
+     * 
+     * Stored Value: localStorage.atmo-theme ('light' or 'dark')
+     */
+    const initializeTheme = () => {
+        // Check localStorage first
+        let savedTheme = localStorage.getItem('atmo-theme');
+        
+        // If no saved theme, check system preference
+        if (!savedTheme) {
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            savedTheme = prefersDark ? 'dark' : 'light';
+        }
+        
+        // Apply the theme
+        applyTheme(savedTheme);
+    };
+    
+    // Apply theme and update UI
+    const applyTheme = (theme) => {
+        const htmlElement = document.documentElement;
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const themeLabel = document.querySelector('.theme-toggle-label');
+        const icon = document.querySelector('#themeToggleBtn i');
+        
+        if (theme === 'dark') {
+            htmlElement.setAttribute('data-bs-theme', 'dark');
+            localStorage.setItem('atmo-theme', 'dark');
+            if (themeLabel) themeLabel.textContent = 'Dark';
+            if (icon) {
+                icon.className = 'bi bi-moon-stars';
+                icon.title = 'Switch to light mode';
+            }
+        } else {
+            htmlElement.removeAttribute('data-bs-theme');
+            localStorage.setItem('atmo-theme', 'light');
+            if (themeLabel) themeLabel.textContent = 'Light';
+            if (icon) {
+                icon.className = 'bi bi-sun';
+                icon.title = 'Switch to dark mode';
+            }
+        }
+    };
+    
+    // Theme toggle button handler
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const htmlElement = document.documentElement;
+            const currentTheme = htmlElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            applyTheme(newTheme);
+        });
+    }
+    
+    // Initialize theme on page load
+    initializeTheme();
+    
+    // ===== END THEME TOGGLE =====
+    
     const mediaInput = document.querySelector('input[name="media"]');
     const previewContainer = document.querySelector('.media-preview-container');
     const previewImg = document.querySelector('.media-preview');
@@ -491,6 +604,39 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Add Comment via AJAX
+    /**
+     * AJAX Comment Creation Handler
+     * 
+     * Handles comment submission via AJAX with real-time DOM updates:
+     * 1. Intercepts form submission
+     * 2. Sends comment text to API endpoint
+     * 3. On success:
+     *    - Clears textarea
+     *    - Updates comment count badge
+     *    - Renders new comment with Edit/Delete buttons (if user's comment)
+     *    - Updates both modal and feed comment sections
+     *    - Scrolls comments list to bottom
+     * 4. Comment structure includes:
+     *    - User avatar and profile link
+     *    - Full name, username, timestamp
+     *    - Comment text (pre-wrapped)
+     *    - Edit/Delete buttons (visible on hover, only for own comments)
+     * 
+     * Event Delegation: Uses event listener on document to handle dynamically added forms
+     * 
+     * API Endpoint: POST /api/posts/addComment/{postId}
+     * Expected Response:
+     * {
+     *   comment: {
+     *     id: number,
+     *     user_id: number,
+     *     comment_text: string,
+     *     created_at: datetime,
+     *     user: { id, first_name, last_name, username, profile_pic }
+     *   },
+     *   comment_count: number
+     * }
+     */
     document.addEventListener('submit', async function(e) {
         const commentForm = safeClosest(e.target, '[action*="addComment"]');
         if (commentForm) {
@@ -614,6 +760,29 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function createCommentHtml(comment) {
+        /**
+         * Generates HTML for a comment item
+         * 
+         * Creates a comment element with:
+         * - User profile picture and details
+         * - Comment text (HTML-escaped)
+         * - Timestamp (relative format: just now, 5m, 2h, 3d)
+         * - Edit/Delete buttons (only for own comments, hidden by default)
+         * 
+         * Parameters:
+         * comment: {
+         *   id: number,
+         *   user_id: number,
+         *   comment_text: string,
+         *   created_at: datetime,
+         *   user: { first_name, last_name, username, profile_pic }
+         * }
+         * 
+         * Returns: HTML string for insertion into DOM
+         * 
+         * Note: Edit/Delete buttons visibility is controlled by CSS (.comment-actions opacity)
+         *       and shown on hover via .comment-item:hover .comment-actions
+         */
         const profilePic = comment.user?.profile_pic ? `/${comment.user.profile_pic}` : '';
         const firstName = comment.user?.first_name || 'Unknown';
         const lastName = comment.user?.last_name || 'User';
@@ -632,21 +801,46 @@ document.addEventListener('DOMContentLoaded', function() {
             timeAgo = Math.floor(diff / 86400) + 'd';
         }
 
+        // Check if comment is owned by current user
+        let isOwnComment = false;
+        const userIdMeta = document.querySelector('meta[name="current-user-id"]');
+        if (userIdMeta) {
+            isOwnComment = comment.user_id === parseInt(userIdMeta.getAttribute('content'));
+        }
+
+        // Build action buttons HTML if this is the user's comment
+        let actionButtonsHtml = '';
+        if (isOwnComment) {
+            actionButtonsHtml = `
+                <div class="comment-actions" style="display: flex; gap: 6px; opacity: 0; transition: opacity 0.2s ease; flex-shrink: 0;">
+                    <button type="button" class="comment-edit-btn" data-comment-id="${comment.id}" data-comment-text="${escapeHtml(comment.comment_text).replace(/"/g, '&quot;')}" title="Edit comment" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 0.9rem; padding: 4px 8px; border-radius: 4px; transition: all 0.2s ease;">
+                        <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <button type="button" class="comment-delete-btn" data-comment-id="${comment.id}" title="Delete comment" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 0.9rem; padding: 4px 8px; border-radius: 4px; transition: all 0.2s ease;">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `;
+        }
+
         return `
-            <div class="comment-item" data-user-id="${comment.user_id}" style="padding: 8px; gap: 8px; margin-bottom: 8px;">
-                <img src="${profilePic}" class="rounded-circle profile-pic-img flex-shrink-0" width="32" height="32" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
-                <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center profile-pic-placeholder flex-shrink-0" style="width: 32px; height: 32px; overflow: hidden; border: 1px solid var(--glass-border);">
+            <div class="comment-item" data-user-id="${comment.user_id}" data-comment-id="${comment.id}" style="position: relative; transition: all 0.2s ease;">
+                <img src="${profilePic}" class="rounded-circle profile-pic-img flex-shrink-0" width="40" height="40" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
+                <div class="rounded-circle bg-secondary d-none d-flex justify-content-center align-items-center profile-pic-placeholder flex-shrink-0" style="width: 40px; height: 40px; overflow: hidden; border: 1px solid var(--glass-border);">
                     <i class="bi bi-person-fill text-white fs-5"></i>
                 </div>
                 <div class="flex-grow-1">
-                    <div class="d-flex align-items-baseline gap-2 mb-0 flex-wrap">
+                    <div class="d-flex align-items-baseline gap-2 mb-1 flex-wrap">
                         <a href="/profile/${username}" class="text-decoration-none">
-                            <span class="fw-bold" style="color: var(--text-primary); font-size: 0.85rem;">${firstName} ${lastName}</span>
+                            <span class="fw-bold" style="color: var(--text-primary);">${firstName} ${lastName}</span>
                         </a>
-                        <span class="text-muted" style="font-size: 0.75rem;">@${username}</span>
-                        <span class="text-muted" style="font-size: 0.75rem;">• ${timeAgo}</span>
+                        <span class="text-muted" style="font-size: 0.85rem;">@${username}</span>
+                        <span class="text-muted" style="font-size: 0.8rem;">• ${timeAgo}</span>
                     </div>
-                    <p class="mb-0" style="font-size: 0.9rem; line-height: 1.4; color: var(--text-primary); white-space: pre-wrap;">${escapeHtml(comment.comment_text)}</p>
+                    <div style="position: relative; display: flex; align-items: flex-start; gap: 8px;">
+                        <p class="mb-0 comment-text" style="font-size: 1rem; line-height: 1.5; color: var(--text-primary); white-space: pre-wrap; flex: 1;">${escapeHtml(comment.comment_text)}</p>
+                        ${actionButtonsHtml}
+                    </div>
                 </div>
             </div>
         `;
@@ -884,8 +1078,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Poll for new notifications every 30 seconds
     setInterval(loadUnreadCount, 30000);
 
-    // Comment Hover Actions
-    document.addEventListener('mouseenter', function(e) {
+    // Comment Hover Actions - Using mouseover/mouseout for proper event delegation
+    document.addEventListener('mouseover', function(e) {
         const commentItem = safeClosest(e.target, '.comment-item');
         if (commentItem) {
             const commentActions = commentItem.querySelector('.comment-actions');
@@ -893,9 +1087,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 commentActions.style.opacity = '1';
             }
         }
-    }, true);
+    });
 
-    document.addEventListener('mouseleave', function(e) {
+    document.addEventListener('mouseout', function(e) {
         const commentItem = safeClosest(e.target, '.comment-item');
         if (commentItem) {
             const commentActions = commentItem.querySelector('.comment-actions');
@@ -903,7 +1097,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 commentActions.style.opacity = '0';
             }
         }
-    }, true);
+    });
 
     // Comment Edit Handler
     document.addEventListener('click', function(e) {
