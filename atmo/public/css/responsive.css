@@ -9,10 +9,6 @@
         padding: 12px 16px;
     }
     
-    .sidebar-right {
-        width: 280px;
-    }
-    
     .center-feed {
         max-width: 100%;
     }
@@ -20,15 +16,19 @@
 
 @media (max-width: 900px) {
     .sidebar-left {
-        width: auto;
-        padding: 10px;
+        width: 70px;
+        padding: 12px;
     }
+    
     .nav-label {
         display: none;
     }
+    
     .sidebar-header {
-        padding: 6px;
+        padding: 8px;
+        margin-bottom: 12px;
     }
+    
     .sidebar-header div {
         display: none;
     }
@@ -36,16 +36,6 @@
     .atmo-layout {
         gap: 16px;
         padding: 8px 12px;
-    }
-    
-    .sidebar-left {
-        width: 70px;
-        padding: 12px;
-    }
-    
-    .sidebar-header {
-        padding: 8px;
-        margin-bottom: 12px;
     }
     
     .nav-link {
@@ -61,10 +51,6 @@
         padding: 10px;
         border-radius: 8px;
     }
-    
-    .sidebar-right {
-        width: 240px;
-    }
 }
 
 @media (max-width: 768px) {
@@ -73,6 +59,7 @@
         padding: 0;
         max-width: 100%;
     }
+    
     .sidebar-left {
         position: fixed;
         bottom: 0;
@@ -80,46 +67,47 @@
         width: 100%;
         height: auto;
         z-index: 1000;
-        background: var(--bg-color);
+        background: var(--glass-bg);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
         border-top: 1px solid var(--glass-border);
         border-radius: 0;
         border-left: none;
         border-right: none;
         border-bottom: none;
-        padding: 6px 0;
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
+        padding: 8px 0;
     }
+    
     /* When modal is open, lower sidebar z-index */
     .modal.show ~ .atmo-layout .sidebar-left {
         z-index: 999;
     }
+    
     .sidebar-header,
-    .sidebar-left > div:nth-child(3) {
+    .theme-toggle-container,
+    .user-profile-tag {
         display: none !important;
     }
+    
     .nav-menu {
         display: flex;
         justify-content: space-evenly;
         margin: 0;
         padding: 0;
     }
+    
     .nav-item {
         margin: 0;
     }
+    
     .nav-link {
         padding: 8px 14px;
         flex-direction: column;
         gap: 2px;
     }
+    
     .nav-link i {
         font-size: 1.3rem;
-    }
-    .center-feed {
-        width: 100%;
-        padding: 10px;
-        padding-bottom: 70px;
-        max-width: 100%;
     }
     
     .sidebar-right {
@@ -164,9 +152,11 @@
     .glass-panel {
         padding: 12px;
     }
+    
     .modal-dialog {
         margin: 6px;
     }
+    
     .modal-content {
         border-radius: 8px;
     }
