@@ -342,14 +342,14 @@ class PostController extends BaseController
     }
 
     /**
-     * Get trending posts based on real interaction metrics
+     * Get trending hashtags based on real interaction metrics
      * 
      * Trending algorithm prioritizes:
-     * - Total interactions (likes + comments + reposts)
-     * - Recent engagement (last 7 days)
-     * - Engagement rate (interactions per post)
+     * - Hashtag usage frequency
+     * - Interactions on posts containing the hashtag
+     * - Recent activity
      * 
-     * @return JSON response with trending posts
+     * @return JSON response with trending hashtags
      */
     public function trending()
     {
@@ -358,78 +358,53 @@ class PostController extends BaseController
         $limit = $this->request->getGet('limit') ?? 7;
         $offset = ($page - 1) * $limit;
         
-        // Get posts with high interaction counts from the last 7 days
+        // Get posts from the last 7 days
         $sevenDaysAgo = date('Y-m-d H:i:s', strtotime('-7 days'));
         
         try {
-            // First, get total count for pagination
-            $countQuery = $db->query("
-                SELECT COUNT(*) as total
-                FROM (
-                    SELECT p.id
-                    FROM posts p
-                    LEFT JOIN likes l ON p.id = l.post_id
-                    LEFT JOIN comments c ON p.id = c.post_id
-                    LEFT JOIN reposts r ON p.id = r.post_id
-                    WHERE p.visibility = 'public'
-                    GROUP BY p.id
-                    HAVING (COUNT(DISTINCT l.user_id) + COUNT(DISTINCT c.id) * 2 + COUNT(DISTINCT r.id) * 3) > 0
-                ) as trending_subquery
-            ");
-            $totalResult = $countQuery->getRowArray();
-            $total = $totalResult['total'] ?? 0;
-            
-            // Query to get trending posts with calculated interaction scores.
-            $trendingQuery = $db->query("
+            // Query all public posts from the last 7 days with their interactions
+            $postsQuery = $db->query("
                 SELECT 
-                    p.id,
                     p.content,
-                    p.user_id,
-                    p.created_at,
-                    u.first_name,
-                    u.last_name,
-                    u.username,
                     COUNT(DISTINCT l.user_id) as like_count,
                     COUNT(DISTINCT c.id) as comment_count,
-                    COUNT(DISTINCT r.id) as repost_count,
-                    (COUNT(DISTINCT l.user_id) + COUNT(DISTINCT c.id) * 2 + COUNT(DISTINCT r.id) * 3) as interaction_score,
-                    GREATEST(
-                        p.created_at,
-                        COALESCE(MAX(c.created_at), p.created_at),
-                        COALESCE(MAX(r.created_at), p.created_at)
-                    ) as last_activity
+                    COUNT(DISTINCT r.id) as repost_count
                 FROM posts p
-                LEFT JOIN users u ON p.user_id = u.id
                 LEFT JOIN likes l ON p.id = l.post_id
                 LEFT JOIN comments c ON p.id = c.post_id
                 LEFT JOIN reposts r ON p.id = r.post_id
-                WHERE p.visibility = 'public'
-                GROUP BY p.id, p.content, p.user_id, p.created_at, u.first_name, u.last_name, u.username
-                HAVING interaction_score > 0
-                ORDER BY interaction_score DESC, last_activity DESC
-                LIMIT $limit OFFSET $offset
-            ");
+                WHERE p.visibility = 'public' AND p.created_at >= ?
+                GROUP BY p.id, p.content
+            ", [$sevenDaysAgo]);
             
-            $trendingPosts = $trendingQuery->getResultArray();
-        } catch (\Exception $ex) {
-            log_message('error', 'Trending query failed: ' . $ex->getMessage());
-            return $this->respond(['data' => [], 'total' => 0, 'page' => $page, 'limit' => $limit, 'totalPages' => 0]);
-        }
-        
-        // If no trending posts, return recent popular posts
-        if (empty($trendingPosts)) {
-            try {
-                // Get total count for fallback
-                $countQuery = $db->query("SELECT COUNT(*) as total FROM posts WHERE visibility = 'public'");
-                $totalResult = $countQuery->getRowArray();
-                $total = $totalResult['total'] ?? 0;
-                
-                $trendingQuery = $db->query("
+            $posts = $postsQuery->getResultArray();
+            
+            // Extract and count hashtags
+            $hashtagCounts = [];
+            foreach ($posts as $post) {
+                if (preg_match_all('/#(\w+)/', $post['content'], $matches)) {
+                    foreach ($matches[1] as $hashtag) {
+                        $hashtag = strtolower($hashtag);
+                        if (!isset($hashtagCounts[$hashtag])) {
+                            $hashtagCounts[$hashtag] = [
+                                'count' => 0,
+                                'interactions' => 0,
+                                'post_count' => 0
+                            ];
+                        }
+                        $hashtagCounts[$hashtag]['count']++;
+                        $hashtagCounts[$hashtag]['post_count']++;
+                        $hashtagCounts[$hashtag]['interactions'] += ($post['like_count'] + $post['comment_count'] + $post['repost_count']);
+                    }
+                }
+            }
+            
+            // If no hashtags found, use fallback approach
+            if (empty($hashtagCounts)) {
+                $fallbackQuery = $db->query("
                     SELECT 
-                        p.id,
                         p.content,
-                        p.user_id,
-                        p.created_at,
+                        p.id,
                         u.first_name,
                         u.last_name,
                         u.username,
@@ -442,38 +417,64 @@ class PostController extends BaseController
                     LEFT JOIN comments c ON p.id = c.post_id
                     LEFT JOIN reposts r ON p.id = r.post_id
                     WHERE p.visibility = 'public'
-                    GROUP BY p.id, p.content, p.user_id, p.created_at, u.first_name, u.last_name, u.username
+                    GROUP BY p.id, p.content, p.user_id, u.first_name, u.last_name, u.username
                     ORDER BY p.created_at DESC
-                    LIMIT $limit OFFSET $offset
                 ");
-                $trendingPosts = $trendingQuery->getResultArray();
-            } catch (\Exception $ex) {
-                log_message('error', 'Trending fallback query failed: ' . $ex->getMessage());
-                return $this->respond(['data' => [], 'total' => 0, 'page' => $page, 'limit' => $limit, 'totalPages' => 0]);
+                $fallbackPosts = $fallbackQuery->getResultArray();
+                
+                $trendingData = array_map(function($post) {
+                    return [
+                        'id' => $post['id'],
+                        'category' => 'Trending',
+                        'topic' => mb_strimwidth($post['content'], 0, 50, '...'),
+                        'post_count' => ($post['like_count'] + $post['comment_count'] + $post['repost_count']),
+                        'author' => $post['first_name'] . ' ' . $post['last_name'],
+                        'username' => $post['username'],
+                        'engagement' => $post['like_count'] . ' likes, ' . $post['comment_count'] . ' comments, ' . $post['repost_count'] . ' reposts'
+                    ];
+                }, $fallbackPosts);
+                
+                $total = count($trendingData);
+                $trending = array_slice($trendingData, $offset, $limit);
+            } else {
+                // Sort hashtags by interactions, then count
+                uasort($hashtagCounts, function($a, $b) {
+                    if ($a['interactions'] !== $b['interactions']) {
+                        return $b['interactions'] - $a['interactions'];
+                    }
+                    return $b['count'] - $a['count'];
+                });
+                
+                $total = count($hashtagCounts);
+                $sortedHashtags = array_slice($hashtagCounts, $offset, $limit, true);
+                
+                $trending = [];
+                $id = 1;
+                foreach ($sortedHashtags as $hashtag => $data) {
+                    $trending[] = [
+                        'id' => $id++,
+                        'category' => 'Trending',
+                        'topic' => '#' . $hashtag,
+                        'post_count' => $data['post_count'],
+                        'author' => '',
+                        'username' => '',
+                        'engagement' => $data['post_count'] . ' posts, ' . $data['interactions'] . ' interactions'
+                    ];
+                }
             }
+            
+            $totalPages = $limit > 0 ? ceil($total / $limit) : 0;
+            
+            return $this->respond([
+                'data' => $trending,
+                'total' => $total,
+                'page' => $page,
+                'limit' => $limit,
+                'totalPages' => $totalPages
+            ]);
+        } catch (\Exception $ex) {
+            log_message('error', 'Trending query failed: ' . $ex->getMessage());
+            return $this->respond(['data' => [], 'total' => 0, 'page' => $page, 'limit' => $limit, 'totalPages' => 0]);
         }
-        
-        // Format response
-        $trending = array_map(function($post) {
-            return [
-                'id' => $post['id'],
-                'category' => 'Trending',
-                'topic' => mb_strimwidth($post['content'], 0, 50, '...'),
-                'post_count' => ($post['like_count'] + $post['comment_count'] + $post['repost_count']),
-                'author' => $post['first_name'] . ' ' . $post['last_name'],
-                'username' => $post['username'],
-                'engagement' => $post['like_count'] . ' likes, ' . $post['comment_count'] . ' comments, ' . $post['repost_count'] . ' reposts'
-            ];
-        }, $trendingPosts);
-
-        $totalPages = $limit > 0 ? ceil($total / $limit) : 0;
-        
-        return $this->respond([
-            'data' => $trending,
-            'total' => $total,
-            'page' => $page,
-            'limit' => $limit,
-            'totalPages' => $totalPages
-        ]);
     }
 }

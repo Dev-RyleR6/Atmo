@@ -514,11 +514,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (postCountStr >= 1000) {
                         postCountStr = (postCountStr / 1000).toFixed(1) + 'K';
                     }
+                    // Only link to profile if username exists (for fallback)
+                    const onClickHandler = topic.username 
+                        ? `onclick="window.location.href='/profile/${topic.username}'" style="cursor: pointer;"`
+                        : '';
                     return `
-                        <div class="trending-item" onclick="window.location.href='/profile/${topic.username}'" style="cursor: pointer;">
+                        <div class="trending-item" ${onClickHandler}>
                             <small class="text-muted">${topic.category} · Trending</small>
                             <div class="fw-bold" style="font-size: 0.95rem; max-width: 100%; word-wrap: break-word;">${escapeHtml(topic.topic)}</div>
-                            <small class="text-muted">${postCountStr} interactions</small>
+                            <small class="text-muted">${topic.engagement || postCountStr + ' interactions'}</small>
                         </div>
                     `;
                 }).join('');
