@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -7,6 +7,20 @@
     <meta name="current-user-id" content="<?= esc(session()->get('user_id') ?? '') ?>">
     <title><?= esc($title ?? 'Atmo - Create Your Own Atmosphere') ?></title>
     <link rel="icon" href="<?= base_url('atmo_logo.png') ?>" type="image/x-icon">
+    <!-- Theme initialization to prevent flash -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('atmo-theme');
+            let theme = savedTheme;
+            if (!theme) {
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                theme = prefersDark ? 'dark' : 'light';
+            }
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-bs-theme', 'dark');
+            }
+        })();
+    </script>
     <!-- Bootstrap CSS (Reset/Grid base only) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
