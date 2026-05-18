@@ -746,6 +746,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (response.ok) {
                     const data = await response.json();
+                    console.log('Add Comment API Response:', data);
                     
                     // Clear the textarea
                     textarea.value = '';
@@ -867,6 +868,7 @@ document.addEventListener('DOMContentLoaded', function() {
          * Note: Edit/Delete buttons visibility is controlled by CSS (.comment-actions opacity)
          *       and shown on hover via .comment-item:hover .comment-actions
          */
+        console.log('createCommentHtml:', comment);
         const profilePic = comment.user?.profile_pic ? `/${comment.user.profile_pic}` : '';
         const firstName = comment.user?.first_name || 'Unknown';
         const lastName = comment.user?.last_name || 'User';
@@ -888,19 +890,23 @@ document.addEventListener('DOMContentLoaded', function() {
         // Check if comment is owned by current user
         let isOwnComment = false;
         const userIdMeta = document.querySelector('meta[name="current-user-id"]');
+        const currentUserId = userIdMeta?.getAttribute('content');
+        console.log('currentUserId from meta:', currentUserId, 'comment.user_id:', comment.user_id, 'typeof comment.user_id:', typeof comment.user_id, 'typeof currentUserId:', typeof currentUserId);
         if (userIdMeta) {
-            isOwnComment = comment.user_id === parseInt(userIdMeta.getAttribute('content'));
+            isOwnComment = String(comment.user_id) === String(currentUserId);
         }
+        console.log('isOwnComment:', isOwnComment);
 
         // Build action buttons HTML if this is the user's comment
         let actionButtonsHtml = '';
         if (isOwnComment) {
+            console.log('Adding action buttons');
             actionButtonsHtml = `
-                <div class="comment-actions" style="display: flex; gap: 6px; opacity: 0; transition: opacity 0.2s ease; flex-shrink: 0;">
-                    <button type="button" class="comment-edit-btn" data-comment-id="${comment.id}" data-comment-text="${escapeHtml(comment.comment_text).replace(/"/g, '&quot;')}" title="Edit comment" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 0.9rem; padding: 4px 8px; border-radius: 4px; transition: all 0.2s ease;">
+                <div class="comment-actions">
+                    <button type="button" class="comment-edit-btn" data-comment-id="${comment.id}" data-comment-text="${escapeHtml(comment.comment_text).replace(/"/g, '&quot;')}" title="Edit comment">
                         <i class="bi bi-pencil-square"></i>
                     </button>
-                    <button type="button" class="comment-delete-btn" data-comment-id="${comment.id}" title="Delete comment" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 0.9rem; padding: 4px 8px; border-radius: 4px; transition: all 0.2s ease;">
+                    <button type="button" class="comment-delete-btn" data-comment-id="${comment.id}" title="Delete comment">
                         <i class="bi bi-trash"></i>
                     </button>
                 </div>
@@ -1162,27 +1168,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Poll for new notifications every 30 seconds
     setInterval(loadUnreadCount, 30000);
 
-    // Comment Hover Actions - Using mouseover/mouseout for proper event delegation
-    document.addEventListener('mouseover', function(e) {
-        const commentItem = safeClosest(e.target, '.comment-item');
-        if (commentItem) {
-            const commentActions = commentItem.querySelector('.comment-actions');
-            if (commentActions) {
-                commentActions.style.opacity = '1';
-            }
-        }
-    });
-
-    document.addEventListener('mouseout', function(e) {
-        const commentItem = safeClosest(e.target, '.comment-item');
-        if (commentItem) {
-            const commentActions = commentItem.querySelector('.comment-actions');
-            if (commentActions) {
-                commentActions.style.opacity = '0';
-            }
-        }
-    });
-
     // Comment Edit Handler
     document.addEventListener('click', function(e) {
         const editBtn = safeClosest(e.target, '.comment-edit-btn');
@@ -1195,18 +1180,11 @@ document.addEventListener('DOMContentLoaded', function() {
             // Create edit form
             const editForm = document.createElement('div');
             editForm.className = 'comment-edit-form';
-            editForm.style.cssText = `
-                display: flex;
-                gap: 8px;
-                align-items: flex-start;
-                margin-top: 8px;
-            `;
-            
             editForm.innerHTML = `
-                <textarea class="glass-input comment-edit-textarea" style="flex: 1; resize: none; min-height: 60px;">${escapeHtml(commentText)}</textarea>
-                <div style="display: flex; gap: 4px; flex-direction: column;">
-                    <button type="button" class="comment-save-btn" data-comment-id="${commentId}" style="background: var(--accent-color); border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s ease;">Save</button>
-                    <button type="button" class="comment-cancel-btn" style="background: var(--text-secondary); border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s ease;">Cancel</button>
+                <textarea class="comment-edit-textarea">${escapeHtml(commentText)}</textarea>
+                <div class="comment-edit-actions">
+                    <button type="button" class="comment-save-btn" data-comment-id="${commentId}">Save</button>
+                    <button type="button" class="comment-cancel-btn">Cancel</button>
                 </div>
             `;
             
