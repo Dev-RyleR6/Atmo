@@ -354,15 +354,32 @@ class PostController extends BaseController
     public function trending()
     {
         $db = \Config\Database::connect();
+        $page = $this->request->getGet('page') ?? 1;
+        $limit = $this->request->getGet('limit') ?? 7;
+        $offset = ($page - 1) * $limit;
         
         // Get posts with high interaction counts from the last 7 days
         $sevenDaysAgo = date('Y-m-d H:i:s', strtotime('-7 days'));
         
         try {
+            // First, get total count for pagination
+            $countQuery = $db->query("
+                SELECT COUNT(*) as total
+                FROM (
+                    SELECT p.id
+                    FROM posts p
+                    LEFT JOIN likes l ON p.id = l.post_id
+                    LEFT JOIN comments c ON p.id = c.post_id
+                    LEFT JOIN reposts r ON p.id = r.post_id
+                    WHERE p.visibility = 'public'
+                    GROUP BY p.id
+                    HAVING (COUNT(DISTINCT l.user_id) + COUNT(DISTINCT c.id) * 2 + COUNT(DISTINCT r.id) * 3) > 0
+                ) as trending_subquery
+            ");
+            $totalResult = $countQuery->getRowArray();
+            $total = $totalResult['total'] ?? 0;
+            
             // Query to get trending posts with calculated interaction scores.
-            // Group by all selected non-aggregated columns to support strict SQL modes.
-            // This query is intentionally broad: it counts all reactions, comments, and reposts
-            // for public posts, then ranks them by score and most recent activity.
             $trendingQuery = $db->query("
                 SELECT 
                     p.id,
@@ -390,18 +407,23 @@ class PostController extends BaseController
                 GROUP BY p.id, p.content, p.user_id, p.created_at, u.first_name, u.last_name, u.username
                 HAVING interaction_score > 0
                 ORDER BY interaction_score DESC, last_activity DESC
-                LIMIT 7
+                LIMIT $limit OFFSET $offset
             ");
             
             $trendingPosts = $trendingQuery->getResultArray();
         } catch (\Exception $ex) {
             log_message('error', 'Trending query failed: ' . $ex->getMessage());
-            return $this->respond([]);
+            return $this->respond(['data' => [], 'total' => 0, 'page' => $page, 'limit' => $limit, 'totalPages' => 0]);
         }
         
         // If no trending posts, return recent popular posts
         if (empty($trendingPosts)) {
             try {
+                // Get total count for fallback
+                $countQuery = $db->query("SELECT COUNT(*) as total FROM posts WHERE visibility = 'public'");
+                $totalResult = $countQuery->getRowArray();
+                $total = $totalResult['total'] ?? 0;
+                
                 $trendingQuery = $db->query("
                     SELECT 
                         p.id,
@@ -422,12 +444,12 @@ class PostController extends BaseController
                     WHERE p.visibility = 'public'
                     GROUP BY p.id, p.content, p.user_id, p.created_at, u.first_name, u.last_name, u.username
                     ORDER BY p.created_at DESC
-                    LIMIT 5
+                    LIMIT $limit OFFSET $offset
                 ");
                 $trendingPosts = $trendingQuery->getResultArray();
             } catch (\Exception $ex) {
                 log_message('error', 'Trending fallback query failed: ' . $ex->getMessage());
-                return $this->respond([]);
+                return $this->respond(['data' => [], 'total' => 0, 'page' => $page, 'limit' => $limit, 'totalPages' => 0]);
             }
         }
         
@@ -444,6 +466,14 @@ class PostController extends BaseController
             ];
         }, $trendingPosts);
 
-        return $this->respond($trending);
+        $totalPages = $limit > 0 ? ceil($total / $limit) : 0;
+        
+        return $this->respond([
+            'data' => $trending,
+            'total' => $total,
+            'page' => $page,
+            'limit' => $limit,
+            'totalPages' => $totalPages
+        ]);
     }
 }

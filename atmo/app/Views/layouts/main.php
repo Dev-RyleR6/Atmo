@@ -10,8 +10,20 @@
     <!-- Bootstrap CSS (Reset/Grid base only) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <!-- Our Glassmorphism Override -->
-    <link href="<?= base_url('css/glass.css') ?>" rel="stylesheet">
+    <!-- Our Glassmorphism Modules -->
+    <link href="<?= base_url('css/variables.css') ?>" rel="stylesheet">
+    <link href="<?= base_url('css/base.css') ?>" rel="stylesheet">
+    <link href="<?= base_url('css/layout.css') ?>" rel="stylesheet">
+    <link href="<?= base_url('css/navigation.css') ?>" rel="stylesheet">
+    <link href="<?= base_url('css/components.css') ?>" rel="stylesheet">
+    <link href="<?= base_url('css/widgets.css') ?>" rel="stylesheet">
+    <link href="<?= base_url('css/posts.css') ?>" rel="stylesheet">
+    <link href="<?= base_url('css/comments.css') ?>" rel="stylesheet">
+    <link href="<?= base_url('css/modals.css') ?>" rel="stylesheet">
+    <link href="<?= base_url('css/notifications.css') ?>" rel="stylesheet">
+    <link href="<?= base_url('css/animations.css') ?>" rel="stylesheet">
+    <link href="<?= base_url('css/profile.css') ?>" rel="stylesheet">
+    <link href="<?= base_url('css/responsive.css') ?>" rel="stylesheet">
 </head>
 
 <body>
@@ -149,7 +161,7 @@
                             <div class="spinner-border spinner-border-sm text-muted" role="status"></div>
                         </div>
                     </div>
-                    <a href="#" class="d-block mt-3 text-decoration-none small" style="color: var(--accent-color);">Show more</a>
+                    <a href="#" id="loadMoreTrending" class="d-block mt-3 text-decoration-none small" style="color: var(--accent-color);">Load more</a>
                 </div>
 
                 <!-- Suggested Users -->
@@ -160,16 +172,10 @@
                             <div class="spinner-border spinner-border-sm text-muted" role="status"></div>
                         </div>
                     </div>
-                    <a href="#" class="d-block mt-3 text-decoration-none small" style="color: var(--accent-color);">Show more</a>
+                    <a href="#" id="loadMoreSuggested" class="d-block mt-3 text-decoration-none small" style="color: var(--accent-color);">Load more</a>
                 </div>
 
                 <div class="px-3 text-muted" style="font-size: 0.75rem;">
-                    <div class="d-flex flex-wrap gap-2 mb-2">
-                        <a href="#" class="text-muted text-decoration-none">Terms of Service</a>
-                        <a href="#" class="text-muted text-decoration-none">Privacy Policy</a>
-                        <a href="#" class="text-muted text-decoration-none">Cookie Policy</a>
-                        <a href="#" class="text-muted text-decoration-none">Accessibility</a>
-                    </div>
                     Powered by Atmo Engine &copy; <?= date('Y') ?>
                 </div>
             </aside>

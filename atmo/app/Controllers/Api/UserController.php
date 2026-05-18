@@ -173,25 +173,44 @@ class UserController extends BaseController
         $loggedInUserId = session()->get('user_id');
         $userModel = new UserModel();
         $followModel = new \App\Models\FollowModel();
+        $page = $this->request->getGet('page') ?? 1;
+        $limit = $this->request->getGet('limit') ?? 5;
+        $offset = ($page - 1) * $limit;
         
         // Get IDs of users already followed
         $following = $followModel->where('follower_id', $loggedInUserId)->findAll();
         $followedIds = array_column($following, 'followed_id');
         $followedIds[] = $loggedInUserId; // Don't suggest self
         
-        $suggestedUsers = [];
+        // Get total count first - use fresh model instance
+        $totalUserModel = new UserModel();
         if (!empty($followedIds)) {
-            $suggestedUsers = $userModel->whereNotIn('id', $followedIds)
-                                        ->limit(5)
-                                        ->findAll();
+            $total = $totalUserModel->whereNotIn('id', $followedIds)->countAllResults();
         } else {
-            $suggestedUsers = $userModel->limit(5)->findAll();
+            $total = $totalUserModel->countAllResults();
+        }
+        
+        // Get suggested users
+        $queryUserModel = new UserModel();
+        if (!empty($followedIds)) {
+            $suggestedUsers = $queryUserModel->whereNotIn('id', $followedIds)
+                                              ->findAll($limit, $offset);
+        } else {
+            $suggestedUsers = $queryUserModel->findAll($limit, $offset);
         }
                                      
         foreach ($suggestedUsers as &$user) {
             unset($user['password']);
         }
         
-        return $this->respond($suggestedUsers);
+        $totalPages = $limit > 0 ? ceil($total / $limit) : 0;
+        
+        return $this->respond([
+            'data' => $suggestedUsers,
+            'total' => $total,
+            'page' => $page,
+            'limit' => $limit,
+            'totalPages' => $totalPages
+        ]);
     }
 }

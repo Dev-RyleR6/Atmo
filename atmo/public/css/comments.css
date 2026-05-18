@@ -1,0 +1,102 @@
+/* Comment Actions (Edit/Delete hover buttons) */
+.comment-actions {
+    display: flex;
+    gap: 8px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    flex-shrink: 0;
+}
+
+.comment-edit-btn,
+.comment-delete-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.comment-edit-btn:hover {
+    color: var(--accent-color);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.comment-delete-btn:hover {
+    color: #dc3545;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Comment Edit Form */
+.comment-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.comment-edit-textarea {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    resize: vertical;
+    min-height: 60px;
+    transition: border-color 0.2s ease;
+}
+
+.comment-edit-textarea:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.1);
+}
+
+.comment-edit-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.comment-save-btn,
+.comment-cancel-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+}
+
+.comment-save-btn {
+    background: var(--accent-color);
+    color: white;
+}
+
+/* Fix text visibility in dark mode where accent-color is light */
+[data-bs-theme="dark"] .comment-save-btn {
+    color: #1F2022;
+    font-weight: 700;
+}
+
+.comment-save-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.comment-cancel-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+}
+
+.comment-cancel-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--text-primary);
+}

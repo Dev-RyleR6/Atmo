@@ -1,0 +1,41 @@
+/* Layout Grid Container */
+.atmo-layout {
+    display: flex;
+    justify-content: center;
+    max-width: 1500px;
+    margin: 0 auto;
+    padding: 16px 24px;
+    gap: 32px;
+}
+
+/* Columns */
+.sidebar-left {
+    position: sticky;
+    top: 16px;
+    width: 260px;
+    height: calc(100vh - 32px);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--border-radius);
+    padding: 16px;
+}
+
+.center-feed {
+    width: 100%;
+    max-width: 750px;
+    flex-shrink: 1;
+    min-height: 100vh;
+}
+
+.sidebar-right {
+    position: sticky;
+    top: 16px;
+    width: 320px;
+    height: calc(100vh - 32px);
+    flex-shrink: 0;
+}

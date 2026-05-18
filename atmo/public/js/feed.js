@@ -399,18 +399,32 @@ document.addEventListener('DOMContentLoaded', function() {
         observer.observe(card);
     });
     
-    // Suggested Users Logic
+    // Suggested Users Logic with Pagination
     const suggestedUsersList = document.getElementById('suggestedUsersList');
+    const loadMoreSuggestedBtn = document.getElementById('loadMoreSuggested');
+    let suggestedUsersPage = 1;
+    let suggestedUsersTotalPages = 1;
+    let suggestedUsersLoading = false;
+    
     if (suggestedUsersList) {
-        fetch('/api/users/suggested')
-            .then(response => response.json())
-            .then(users => {
-                if (users.length === 0) {
-                    suggestedUsersList.innerHTML = '<div class="text-muted small">No suggestions right now.</div>';
-                    return;
+        async function loadSuggestedUsers(append = false) {
+            if (suggestedUsersLoading) return;
+            suggestedUsersLoading = true;
+            
+            try {
+                const response = await fetch(`/api/users/suggested?page=${suggestedUsersPage}&limit=5`);
+                const data = await response.json();
+                const users = data.data || [];
+                
+                if (!append) {
+                    if (users.length === 0) {
+                        suggestedUsersList.innerHTML = '<div class="text-muted small">No suggestions right now.</div>';
+                        if (loadMoreSuggestedBtn) loadMoreSuggestedBtn.style.display = 'none';
+                        return;
+                    }
                 }
-
-                suggestedUsersList.innerHTML = users.map(user => `
+                
+                const usersHtml = users.map(user => `
                     <div class="suggested-user-item">
                         <a href="/profile/${user.username}" class="text-decoration-none">
                             <img src="${user.profile_pic ? '/'+user.profile_pic : ''}" 
@@ -431,34 +445,71 @@ document.addEventListener('DOMContentLoaded', function() {
                         </form>
                     </div>
                 `).join('');
-            })
-            .catch(error => {
+                
+                if (append) {
+                    suggestedUsersList.insertAdjacentHTML('beforeend', usersHtml);
+                } else {
+                    suggestedUsersList.innerHTML = usersHtml;
+                }
+                
+                suggestedUsersTotalPages = data.totalPages || 1;
+                if (loadMoreSuggestedBtn) {
+                    if (suggestedUsersPage >= suggestedUsersTotalPages) {
+                        loadMoreSuggestedBtn.style.display = 'none';
+                    } else {
+                        loadMoreSuggestedBtn.style.display = 'block';
+                    }
+                }
+            } catch (error) {
                 console.error('Error fetching suggested users:', error);
-                suggestedUsersList.innerHTML = '<div class="text-muted small">Failed to load suggestions.</div>';
+                if (!append) {
+                    suggestedUsersList.innerHTML = '<div class="text-muted small">Failed to load suggestions.</div>';
+                }
+            } finally {
+                suggestedUsersLoading = false;
+            }
+        }
+        
+        loadSuggestedUsers();
+        
+        if (loadMoreSuggestedBtn) {
+            loadMoreSuggestedBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                suggestedUsersPage++;
+                loadSuggestedUsers(true);
             });
+        }
     }
 
-    // Trending Topics Logic - Fetch and display real trending posts
+    // Trending Topics Logic with Pagination
     const trendingList = document.getElementById('trendingList');
+    const loadMoreTrendingBtn = document.getElementById('loadMoreTrending');
+    let trendingPage = 1;
+    let trendingTotalPages = 1;
+    let trendingLoading = false;
+    
     if (trendingList) {
-        fetch('/api/posts/trending')
-            .then(response => {
+        async function loadTrending(append = false) {
+            if (trendingLoading) return;
+            trendingLoading = true;
+            
+            try {
+                const response = await fetch(`/api/posts/trending?page=${trendingPage}&limit=7`);
                 if (!response.ok) {
                     throw new Error('Trending request failed with status ' + response.status);
                 }
-                return response.json();
-            })
-            .then(data => {
-                const topics = Array.isArray(data)
-                    ? data
-                    : (data && Array.isArray(data.data) ? data.data : []);
-
-                if (!Array.isArray(topics) || topics.length === 0) {
-                    trendingList.innerHTML = '<div class="text-muted small">No trending topics right now.</div>';
-                    return;
+                const data = await response.json();
+                const topics = data.data || [];
+                
+                if (!append) {
+                    if (!Array.isArray(topics) || topics.length === 0) {
+                        trendingList.innerHTML = '<div class="text-muted small">No trending topics right now.</div>';
+                        if (loadMoreTrendingBtn) loadMoreTrendingBtn.style.display = 'none';
+                        return;
+                    }
                 }
-
-                trendingList.innerHTML = topics.map(topic => {
+                
+                const topicsHtml = topics.map(topic => {
                     let postCountStr = topic.post_count;
                     if (postCountStr >= 1000) {
                         postCountStr = (postCountStr / 1000).toFixed(1) + 'K';
@@ -471,11 +522,40 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     `;
                 }).join('');
-            })
-            .catch(error => {
+                
+                if (append) {
+                    trendingList.insertAdjacentHTML('beforeend', topicsHtml);
+                } else {
+                    trendingList.innerHTML = topicsHtml;
+                }
+                
+                trendingTotalPages = data.totalPages || 1;
+                if (loadMoreTrendingBtn) {
+                    if (trendingPage >= trendingTotalPages) {
+                        loadMoreTrendingBtn.style.display = 'none';
+                    } else {
+                        loadMoreTrendingBtn.style.display = 'block';
+                    }
+                }
+            } catch (error) {
                 console.error('Error fetching trending topics:', error);
-                trendingList.innerHTML = '<div class="text-muted small">Failed to load trending.</div>';
+                if (!append) {
+                    trendingList.innerHTML = '<div class="text-muted small">Failed to load trending.</div>';
+                }
+            } finally {
+                trendingLoading = false;
+            }
+        }
+        
+        loadTrending();
+        
+        if (loadMoreTrendingBtn) {
+            loadMoreTrendingBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                trendingPage++;
+                loadTrending(true);
             });
+        }
     }
 
     // Keep track of which button opened the active modal so we can restore focus safely.

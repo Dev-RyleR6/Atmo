@@ -1,0 +1,39 @@
+/* Profile page specific styling */
+.profile-header-cover {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(59, 130, 246, 0.15) 100%);
+}
+
+.profile-stat-item {
+    transition: all 0.3s ease;
+}
+
+.profile-stat-item:hover {
+    transform: translateY(-2px);
+}
+
+.profile-stat-number {
+    font-weight: 700;
+    line-height: 1;
+}
+
+.profile-stat-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* Profile stats hover effect */
+.cursor-pointer {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 6px 12px;
+    border-radius: 8px;
+}
+
+.cursor-pointer:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Profile Tab Content */
+.profile-tab-content {
+    animation: fadeInUp 0.3s ease;
+}
